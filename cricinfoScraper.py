@@ -49,6 +49,7 @@ class CricinfoScraper:
             shortComment = a.contents[0].text
             longComment = a.contents[1].text
             bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
+            outcome = outcome.replace(' ', '_')
             cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)
             self.outcomeSequence.append(outcome)
             if outcome in self.outcomeEmissions:

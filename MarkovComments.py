@@ -7,7 +7,7 @@ from sklearn.preprocessing import normalize
 class MarkovComments:
 
     def __init__(self, n):
-        self.data = open('comments.txt','r').readline()
+        self.data = open('scrapedSequences/outcomes.txt','r').readline()
         self.tokens = self.data.split()
         #self.tokens_distinct = list(set(self.tokens))
         self.tokens_to_id, self.id_to_tokens = MarkovComments.create_indices(self.tokens)
@@ -79,17 +79,18 @@ class MarkovComments:
         sequence = seed.split()
         for i in range(k):
             next_word = self.generate_next_word(prefix,temperature=temperature)
-            if(next_word == 'END1'):
+            if (next_word == 'END1') or next_word == 'END':
                 break
             sequence.append(next_word)
             prefix = ' '.join(sequence[-self.n:])
 
         return ' '.join(sequence)
 
-MC = MarkovComments(2)
+MC = MarkovComments(1)
 while(input("q to quit") != 'q'):
     #print(MC.generate_sequence('START1 START2 START3', 100)[21:])
-    print(MC.generate_sequence('START2 START3', 100)[14:])
+    #print(MC.generate_sequence('START2 START3', 100)[14:])
     #print(MC.generate_sequence('START3', 100)[7:])
+    print(MC.generate_sequence('START', 100)[6:])
 
 #print(MC.generate_sequence(np.random.choice(MC.ngrams), 100))q
