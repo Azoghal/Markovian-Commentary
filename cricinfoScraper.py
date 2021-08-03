@@ -1,3 +1,4 @@
+import os
 import time
 from selenium import webdriver
 from selenium.webdriver import ActionChains
@@ -42,7 +43,7 @@ class CricinfoScraper:
             last = temp
 
     def getCommentBlocks(self):
-        self.outcomeSequence.append('START ')
+        self.outcomeSequence.append('START')
         self.soup = BeautifulSoup(self.driver.page_source, features='html.parser')
         for a in self.soup.findAll('div', attrs={'class': 'match-comment-wrapper'}):
             shortComment = a.contents[0].text
@@ -50,13 +51,22 @@ class CricinfoScraper:
             bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
             cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)
             self.outcomeSequence.append(outcome)
-            if(outcome in self.outcomeEmissions):
+            if outcome in self.outcomeEmissions:
                 self.outcomeEmissions[outcome].append(cleanedComment)  # does this have affect?
             else:
                 self.outcomeEmissions[outcome] = [cleanedComment]
             #print(f'Bowler: {bowler:20}   Batter: {batter:20}   Outcome: {outcome}')
             #if(bowler == 'Asitha Fernando'): print(cleanedComment) # shows that there is a need to check for both names
         self.outcomeSequence.append(' END')
+
+    def writeSequencesToFiles(self):
+        save_path = 'scrapedSequences/'
+        with open(save_path+'outcomes.txt', 'w') as f:
+            f.write(', '.join(self.outcomeSequence))
+        for k in self.outcomeEmissions.keys():
+            with open(save_path+k+'.txt', 'w') as f:
+                f.write('START1 START2 START3 ')
+                f.write(' END1 END2 END3 START1 START2 START3 '.join(self.outcomeEmissions[k]) + ' END1 END2 END3')
 
     def extractBowlerBatterOutcome(self, shortComment):
         shortWords = shortComment.split()
@@ -219,3 +229,4 @@ class CricinfoScraper:
 
 scraper = CricinfoScraper('safeAddresses')
 scraper.scrape()
+scraper.writeSequencesToFiles()
