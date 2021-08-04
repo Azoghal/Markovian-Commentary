@@ -10,8 +10,9 @@ def similarity(first, second):
     return SequenceMatcher(None, first, second).ratio()
 
 class CricinfoScraper:
-    def __init__(self, addressfile): #  give a file of web addresses to open
+    def __init__(self, addressfile, maxNgramLength): #  give a file of web addresses to open
         self.addresses = open(addressfile, 'r').readlines()
+        self.maxNgramLength = maxNgramLength
         self.outcomeEmissions = {}  # dict of outcome: array of emissions
         self.outcomeSequence = []  # array of outcomes to use to do transition probabilities
         self.driver = webdriver.Chrome("C:/Users/sambe/chromedriver_win32/chromedriver.exe")
@@ -71,10 +72,18 @@ class CricinfoScraper:
         save_path = 'scrapedSequences/'
         with open(save_path+'outcomes.txt', 'a') as f:
             f.write(' '.join(self.outcomeSequence))
+
+        startSequence = ''
+        endSequence = ''
+        for i in range(self.maxNgramLength):
+            startSequence = startSequence + 'START' + str(i) + ' '
+            endSequence = endSequence + ' ' + 'END' + str(i)
+        endAndStart = endSequence + ' ' + startSequence
+        print(endAndStart)
         for k in self.outcomeEmissions.keys():
             with open(save_path+k+'.txt', 'a') as f:
-                f.write('START1 START2 START3 ')
-                f.write(' END1 END2 END3 START1 START2 START3 '.join(self.outcomeEmissions[k]) + ' END1 END2 END3')
+                f.write(startSequence)
+                f.write(endAndStart.join(self.outcomeEmissions[k]) + endSequence)
 
     def extractBowlerBatterOutcome(self, shortComment):
         shortWords = shortComment.split()
@@ -143,8 +152,7 @@ class CricinfoScraper:
                 cleanedWords.append(word)
         return ' '.join(cleanedWords)
 
-
-    def getShortComments(self):  # being deprecated
+    '''def getShortComments(self):  # being deprecated
         for a in self.soup.findAll('div', attrs={'class': 'match-comment-short-text'}):
             comment = a.text
             words = comment.split()
@@ -189,6 +197,7 @@ class CricinfoScraper:
                 j = j + 1
             i = i + 1
             self.long_comments.append(' '.join(tokens))
+    '''
 
     def scrapeAll(self):
         self.createSequenceFiles()
@@ -240,7 +249,7 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 
-scraper = CricinfoScraper('addresses.txt')
+scraper = CricinfoScraper('safeAddresses', 3)
 # scraper.scrape()
 # scraper.writeSequencesToFiles()
 scraper.scrapeAll()
