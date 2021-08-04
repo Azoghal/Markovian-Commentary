@@ -6,8 +6,8 @@ from sklearn.preprocessing import normalize
 
 class MarkovComments:
 
-    def __init__(self, n):
-        self.data = open('scrapedSequences/outcomes.txt','r').readline()
+    def __init__(self, n, filename):
+        self.data = open(filename, 'r').readline()
         self.tokens = self.data.split()
         #self.tokens_distinct = list(set(self.tokens))
         self.tokens_to_id, self.id_to_tokens = MarkovComments.create_indices(self.tokens)
@@ -86,11 +86,12 @@ class MarkovComments:
 
         return ' '.join(sequence)
 
-MC = MarkovComments(1)
-while(input("q to quit") != 'q'):
-    #print(MC.generate_sequence('START1 START2 START3', 100)[21:])
-    #print(MC.generate_sequence('START2 START3', 100)[14:])
-    #print(MC.generate_sequence('START3', 100)[7:])
-    print(MC.generate_sequence('START', 100)[6:])
 
-#print(MC.generate_sequence(np.random.choice(MC.ngrams), 100))q
+# MC = MarkovComments(2, 'scrapedSequences/FOUR_runs.txt')
+# while input("q to quit") != 'q':
+    # print(MC.generate_sequence('START1 START2 START3', 30)[21:])
+    # print(MC.generate_sequence('START2 START3', 100)[14:])
+    # print(MC.generate_sequence('START3', 100)[7:])
+    # print(MC.generate_sequence('START', 5)[6:])    #  for outcomes.txt n = 1
+
+# print(MC.generate_sequence(np.random.choice(MC.ngrams), 100))q
