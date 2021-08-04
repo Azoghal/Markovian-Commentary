@@ -41,6 +41,12 @@ class CricinfoScraper:
                 zeroCount = 0
             last = temp
 
+    def translateOutcome(self, outcome):
+        translations = {'FOUR runs':'4 runs', 'SIX runs':'6 runs', '(no ball), FOUR runs':'(no ball), 4 runs', '(no ball), SIX runs':'(no ball), 6 runs'}
+        if outcome in translations:
+            return translations[outcome]
+        else:
+            return outcome
     def extractOutcomeAndComment(self):
         self.inningsBalls = 0
         self.outcomeSequence.append('START')
@@ -53,6 +59,7 @@ class CricinfoScraper:
             else:
                 longComment = a.contents[1].text
             bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
+            outcome = self.translateOutcome(outcome)
             outcome = outcome.replace(' ', '_')
             cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)
             self.outcomeSequence.append(outcome)
@@ -261,8 +268,8 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 
-scraper = CricinfoScraper('addresses.txt', 3)
+scraper = CricinfoScraper('singleAddress.txt', 3)
 # scraper.scrape()
-# scraper.writeSequencesToFiles()
+# scraper.createSequenceFiles()
 scraper.scrapeAll()
 
