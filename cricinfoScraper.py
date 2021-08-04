@@ -17,6 +17,8 @@ class CricinfoScraper:
         self.outcomeSequence = []  # array of outcomes to use to do transition probabilities
         self.driver = webdriver.Chrome("C:/Users/sambe/chromedriver_win32/chromedriver.exe")
         self.cookieClickNeeded = True
+        self.totalBalls = 0
+        self.inningsBalls = 0
 
 
 
@@ -33,19 +35,21 @@ class CricinfoScraper:
             if temp - last == 0:
                 zeroCount = zeroCount + 1
                 if zeroCount > 10:
+                    print('scrolling complete')
                     break
             else:
                 zeroCount = 0
-            print(zeroCount)
             last = temp
 
     def extractOutcomeAndComment(self):
+        self.inningsBalls = 0
         self.outcomeSequence.append('START')
         self.soup = BeautifulSoup(self.driver.page_source, features='html.parser')
         for a in self.soup.findAll('div', attrs={'class': 'match-comment-wrapper'}):
             shortComment = a.contents[0].text
+            self.inningsBalls = self.inningsBalls + 1
             if len(a.contents) < 2:
-                longComment = ''
+                longComment = ''        # rare case where there is no long comment div
             else:
                 longComment = a.contents[1].text
             bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
@@ -58,7 +62,9 @@ class CricinfoScraper:
                 self.outcomeEmissions[outcome] = [cleanedComment]
             #print(f'Bowler: {bowler:20}   Batter: {batter:20}   Outcome: {outcome}')
             #if(bowler == 'Asitha Fernando'): print(cleanedComment) # shows that there is a need to check for both names
-        self.outcomeSequence.append(' END')
+        self.outcomeSequence.append('END')
+        print('balls in innings :', self.inningsBalls)
+        self.totalBalls = self.totalBalls + self.inningsBalls
 
 
     def createSequenceFiles(self):
@@ -71,14 +77,13 @@ class CricinfoScraper:
     def writeSequencesToFiles(self):
         save_path = 'scrapedSequences/'
         with open(save_path+'outcomes.txt', 'a') as f:
-            f.write(' '.join(self.outcomeSequence))
+            f.write(' '.join(self.outcomeSequence) + ' ')
 
         startSequence = ''
         endSequence = ' END'
         for i in range(self.maxNgramLength):
             startSequence = startSequence + 'START' + str(i) + ' '
         endAndStart = endSequence + ' ' + startSequence
-        print(endAndStart)
         for k in self.outcomeEmissions.keys():
             with open(save_path+k+'.txt', 'a') as f:
                 f.write(startSequence)
@@ -199,12 +204,20 @@ class CricinfoScraper:
     '''
 
     def scrapeAll(self):
+        i = 1
         self.createSequenceFiles()
         for address in self.addresses:
+            if address == '':
+                print('empty address')
+                break
+            print('scraping address ' + str(i) +  ' of ' + str(len(self.addresses)))
             self.driver.get(address[:-1])
             self.content = self.driver.page_source
             self.scrape() #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
             self.writeSequencesToFiles()
+            print('scraped data written to files')
+            i = i + 1
+        print('total balls: ', self.totalBalls)
 
     def scrape(self): #  scrape and clean the long and short comments
         # reset the sequences for next page
@@ -248,7 +261,7 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 
-scraper = CricinfoScraper('safeAddresses', 3)
+scraper = CricinfoScraper('addresses.txt', 3)
 # scraper.scrape()
 # scraper.writeSequencesToFiles()
 scraper.scrapeAll()
