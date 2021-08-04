@@ -74,10 +74,9 @@ class CricinfoScraper:
             f.write(' '.join(self.outcomeSequence))
 
         startSequence = ''
-        endSequence = ''
+        endSequence = ' END'
         for i in range(self.maxNgramLength):
             startSequence = startSequence + 'START' + str(i) + ' '
-            endSequence = endSequence + ' ' + 'END' + str(i)
         endAndStart = endSequence + ' ' + startSequence
         print(endAndStart)
         for k in self.outcomeEmissions.keys():

@@ -79,7 +79,7 @@ class MarkovComments:
         sequence = seed.split()
         for i in range(k):
             next_word = self.generate_next_word(prefix,temperature=temperature)
-            if (next_word == 'END1') or next_word == 'END':
+            if next_word == 'END':
                 break
             sequence.append(next_word)
             prefix = ' '.join(sequence[-self.n:])
