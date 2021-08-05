@@ -12,7 +12,7 @@ def similarity(first, second):
 class CricinfoScraper:
     def __init__(self, addressfile, maxNgramLength): #  give a file of web addresses to open
         self.addresses = open(addressfile, 'r').readlines()
-        self.maxNgramLength = maxNgramLength
+        self.maxNgramLength = maxNgramLength    # allows n START tokens to be added at beginning to facilatate ngrams
         self.outcomeEmissions = {}  # dict of outcome: array of emissions
         self.outcomeSequence = []  # array of outcomes to use to do transition probabilities
         self.driver = webdriver.Chrome("C:/Users/sambe/chromedriver_win32/chromedriver.exe")
@@ -42,14 +42,16 @@ class CricinfoScraper:
             last = temp
 
     def translateOutcome(self, outcome):
-        translations = {'FOUR runs':'4 runs', 'SIX runs':'6 runs', '(no ball), FOUR runs':'(no ball), 4 runs', '(no ball), SIX runs':'(no ball), 6 runs'}
+        translations = {'FOUR runs':'4 runs', 'SIX runs':'6 runs', '(no ball) FOUR runs':'(no ball) 4 runs', '(no ball) SIX runs':'(no ball) 6 runs'}
         if outcome in translations:
             return translations[outcome]
         else:
             return outcome
+
     def extractOutcomeAndComment(self):
         self.inningsBalls = 0
-        self.outcomeSequence.append('START')
+        for i in range(self.maxNgramLength):
+            self.outcomeSequence.append('START'+str(i))
         self.soup = BeautifulSoup(self.driver.page_source, features='html.parser')
         for a in self.soup.findAll('div', attrs={'class': 'match-comment-wrapper'}):
             shortComment = a.contents[0].text
@@ -61,14 +63,13 @@ class CricinfoScraper:
             bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
             outcome = self.translateOutcome(outcome)
             outcome = outcome.replace(' ', '_')
-            cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)
+            cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=True)  # v =-----
             self.outcomeSequence.append(outcome)
             if outcome in self.outcomeEmissions:
-                self.outcomeEmissions[outcome].append(cleanedComment)  # does this have affect?
+                self.outcomeEmissions[outcome].append(cleanedComment)
             else:
                 self.outcomeEmissions[outcome] = [cleanedComment]
-            #print(f'Bowler: {bowler:20}   Batter: {batter:20}   Outcome: {outcome}')
-            #if(bowler == 'Asitha Fernando'): print(cleanedComment) # shows that there is a need to check for both names
+            # there is a need to check for both names
         self.outcomeSequence.append('END')
         print('balls in innings :', self.inningsBalls)
         self.totalBalls = self.totalBalls + self.inningsBalls
@@ -83,14 +84,16 @@ class CricinfoScraper:
 
     def writeSequencesToFiles(self):
         save_path = 'scrapedSequences/'
-        with open(save_path+'outcomes.txt', 'a') as f:
-            f.write(' '.join(self.outcomeSequence) + ' ')
-
         startSequence = ''
         endSequence = ' END'
+
         for i in range(self.maxNgramLength):
             startSequence = startSequence + 'START' + str(i) + ' '
         endAndStart = endSequence + ' ' + startSequence
+
+        with open(save_path+'outcomes.txt', 'a') as f:
+            f.write(' '.join(self.outcomeSequence) + ' ')
+
         for k in self.outcomeEmissions.keys():
             with open(save_path+k+'.txt', 'a') as f:
                 f.write(startSequence)
@@ -268,7 +271,7 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 
-scraper = CricinfoScraper('singleAddress.txt', 3)
+scraper = CricinfoScraper('addresses.txt', 2)
 # scraper.scrape()
 # scraper.createSequenceFiles()
 scraper.scrapeAll()

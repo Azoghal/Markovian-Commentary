@@ -6,16 +6,18 @@ from sklearn.preprocessing import normalize
 
 class MarkovComments:
 
-    def __init__(self, n, filename):
+    def __init__(self, n, filename, ):
         self.data = open(filename, 'r').readline()
         self.tokens = self.data.split()
         #self.tokens_distinct = list(set(self.tokens))
         self.tokens_to_id, self.id_to_tokens = MarkovComments.create_indices(self.tokens)
-        self.n = n  ## consider needing to add START multiple times to the start of phrases when wanting to use ngrams
+        self.n = n
         self.ngrams, self.ngrams_distinct = self.create_ngrams()
         self.ngrams_to_id, self.id_to_ngrams = MarkovComments.create_indices(self.ngrams)
         self.transition_matrix_prob = self.create_transition_matrix_prob()
-
+        self.startPrefix = ''
+        startSeq = [('START' + str(i)) for i in range(self.n)]
+        self.startPrefix = ' '.join(startSeq)
 
     @staticmethod
     def create_indices(values):
@@ -32,7 +34,7 @@ class MarkovComments:
     def create_ngrams(self):
         sequences = [self.tokens[i:] for i in range(self.n)]
         ngrams = [' '.join(ngram) for ngram in list(zip(*sequences))]
-        return ngrams, list(set(ngrams))  #  ngrams a list of all 2 grams, also return one w/o duplicates
+        return ngrams, list(set(ngrams))  #  ngrams a list of all n grams, also return one w/o duplicates
 
     def create_transition_matrix(self):
         row_ind, col_ind, values = [], [], []
@@ -79,7 +81,7 @@ class MarkovComments:
         sequence = seed.split()
         for i in range(k):
             next_word = self.generate_next_word(prefix,temperature=temperature)
-            if next_word == 'END':
+            if next_word == 'END': # consider randomly rejecting end? to lengthen comments
                 break
             sequence.append(next_word)
             prefix = ' '.join(sequence[-self.n:])
@@ -87,11 +89,16 @@ class MarkovComments:
         return ' '.join(sequence)
 
 
-# MC = MarkovComments(2, 'scrapedSequences/FOUR_runs.txt')
-# while input("q to quit") != 'q':
-    # print(MC.generate_sequence('START1 START2 START3', 30)[21:])
+#MC = MarkovComments(2, 'scrapedSequences/1_run.txt')
+
+
+#while input("q to quit") != 'q':
+    #print(MC.generate_sequence(MC.startPrefix, 30))
     # print(MC.generate_sequence('START2 START3', 100)[14:])
     # print(MC.generate_sequence('START3', 100)[7:])
     # print(MC.generate_sequence('START', 5)[6:])    #  for outcomes.txt n = 1
 
-# print(MC.generate_sequence(np.random.choice(MC.ngrams), 100))q
+#print(MC.generate_sequence(np.random.choice(MC.ngrams), 100))
+# while input("q to quit") != 'q':
+    #  print(MC.generate_next_word(MC.currentPrefix)) for outcomes
+
