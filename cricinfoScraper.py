@@ -63,7 +63,7 @@ class CricinfoScraper:
             bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
             outcome = self.translateOutcome(outcome)
             outcome = outcome.replace(' ', '_')
-            cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=True)  # v =-----
+            cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)  # v =-----
             self.outcomeSequence.append(outcome)
             if outcome in self.outcomeEmissions:
                 self.outcomeEmissions[outcome].append(cleanedComment)

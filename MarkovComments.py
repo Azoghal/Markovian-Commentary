@@ -72,8 +72,10 @@ class MarkovComments:
         prefix_id = self.ngrams_to_id[prefix]
         weights = self.transition_matrix_prob[prefix_id].toarray()[0]
         #do temperature stuff?
+
         token_id = np.random.choice(range(len(weights)), p=weights)
         next_word = self.id_to_tokens[token_id]
+
         return next_word
 
     def generate_sequence(self, seed, k=10, temperature=1):
@@ -81,7 +83,7 @@ class MarkovComments:
         sequence = seed.split()
         for i in range(k):
             next_word = self.generate_next_word(prefix,temperature=temperature)
-            if next_word == 'END': # consider randomly rejecting end? to lengthen comments
+            if next_word == 'END':  # consider randomly rejecting end? to lengthen comments
                 break
             sequence.append(next_word)
             prefix = ' '.join(sequence[-self.n:])
