@@ -1,5 +1,7 @@
 import os
 import time
+import unicodedata
+
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 from bs4 import BeautifulSoup
@@ -19,7 +21,8 @@ class CricinfoScraper:
         self.cookieClickNeeded = True
         self.totalBalls = 0
         self.inningsBalls = 0
-
+        self.teamA = []
+        self.teamB = []  # current teams - updated for each new link
 
 
     def scrollToBottom(self):
@@ -73,7 +76,6 @@ class CricinfoScraper:
         self.outcomeSequence.append('END')
         print('balls in innings :', self.inningsBalls)
         self.totalBalls = self.totalBalls + self.inningsBalls
-
 
     def createSequenceFiles(self):
         save_path = 'scrapedSequences/'
@@ -221,20 +223,51 @@ class CricinfoScraper:
                 print('empty address')
                 break
             print('scraping address ' + str(i) +  ' of ' + str(len(self.addresses)))
-            self.driver.get(address[:-1])
-            self.content = self.driver.page_source
-            self.scrape() #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
+            self.scrapeTeamList(address[:-1]+'/full-scorecard')
+            self.scrape(address[:-1]+'/ball-by-ball-commentary') #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
             self.writeSequencesToFiles()
             print('scraped data written to files')
             i = i + 1
         print('total balls: ', self.totalBalls)
 
-    def scrape(self): #  scrape and clean the long and short comments
+    def scrapeTeamList(self, address):
+        self.teams = [[], []]
+        self.driver.get(address)
+        self.content = self.driver.page_source
+        self.soup = BeautifulSoup(self.content, features="html.parser")
+
+        innings = self.soup.findAll('table', attrs={'class':'batsman'})
+        for i in range(len(innings)):
+            rowsU = innings[i]
+            if 'w-100' in rowsU.get_attribute_list('class'):
+                break
+            # in some way check so that class is table batsman not w-100 table batsman
+            rows = rowsU.contents[1]
+            for rowI in range(len(rows.contents)-1):
+                if rowI%2 == 0:
+                    b = rows.contents[rowI].contents[0].text
+                    b = unicodedata.normalize("NFKD", b)
+                    self.teams[i].append(b.lstrip().rstrip())
+            if len(rows.contents) < 23:
+                # print(i, 'innings batters that did not bat')
+                footer = innings[i].contents[2]
+                assert(len(footer.contents) > 2)
+                didNotBat = footer.contents[1].text[13:]
+                didNotBat = unicodedata.normalize("NFKD", didNotBat)
+                nonBatters = (didNotBat.split(','))
+                for b in nonBatters:
+                    b = b.lstrip().rstrip()
+                    self.teams[i].append(b)
+        print(self.teams[0])
+        print(self.teams[1])
+
+    def scrape(self, address):  #  scrape and clean the long and short comments
         # reset the sequences for next page
         self.outcomeEmissions = {}
         self.outcomeSequence = []
         self.scrollToBottom()
 
+        self.driver.get(address)
         self.content = self.driver.page_source
         self.soup = BeautifulSoup(self.content, features="html.parser")
 
@@ -274,5 +307,8 @@ class CricinfoScraper:
 scraper = CricinfoScraper('addresses.txt', 2)
 # scraper.scrape()
 # scraper.createSequenceFiles()
-scraper.scrapeAll()
+# scraper.scrapeAll()
+for a in scraper.addresses:
+    scraper.scrapeTeamList(a+'/full-scorecard')
+    print()
 
