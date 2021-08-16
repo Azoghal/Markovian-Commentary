@@ -8,6 +8,9 @@ from bs4 import BeautifulSoup
 from difflib import SequenceMatcher
 import pandas
 
+from player import player
+
+
 def similarity(first, second):
     return SequenceMatcher(None, first, second).ratio()
 
@@ -21,28 +24,12 @@ class CricinfoScraper:
         self.cookieClickNeeded = True
         self.totalBalls = 0
         self.inningsBalls = 0
-        self.teamA = []
-        self.teamB = []  # current teams - updated for each new link
+        # self.teamA = []
+        # self.teamB = []  # current teams - updated for each new link
+        self.players = []
+        self.allNames = []
 
 
-    def scrollToBottom(self):
-        Y = 1000
-        last = 0
-        zeroCount = 0
-        while True:
-            self.driver.execute_script("window.scrollTo(0, " + str(Y) + ")")
-            Y = Y + 2000
-            self.content = self.driver.page_source
-            soup = BeautifulSoup(self.content, features="html.parser")
-            temp = len(soup.text)
-            if temp - last == 0:
-                zeroCount = zeroCount + 1
-                if zeroCount > 10:
-                    print('scrolling complete')
-                    break
-            else:
-                zeroCount = 0
-            last = temp
 
     def translateOutcome(self, outcome):
         translations = {'FOUR runs':'4 runs', 'SIX runs':'6 runs', '(no ball) FOUR runs':'(no ball) 4 runs', '(no ball) SIX runs':'(no ball) 6 runs'}
@@ -168,53 +155,6 @@ class CricinfoScraper:
                 cleanedWords.append(word)
         return ' '.join(cleanedWords)
 
-    '''def getShortComments(self):  # being deprecated
-        for a in self.soup.findAll('div', attrs={'class': 'match-comment-short-text'}):
-            comment = a.text
-            words = comment.split()
-            split = words.index('to')
-            end = len(words)
-            i = 0
-            bowler = ' '.join(words[0:split])
-            batter = ''
-            for word in words:
-                if word[-1] == ',':
-                    end = i
-                    batter = word[0:len(word) - 1]
-                i = i + 1
-            outcome = ' '.join(words[end + 1:len(words)])
-            self.bowler_to_batter_to_outcome.append([bowler, batter, outcome])
-
-    def getLongComments(self): #  being deprecated
-        i = 0
-        for a in self.soup.findAll('div', attrs={'class': 'match-comment-long-text', 'itemprop': 'articleBody'}):
-            long = a.text
-            tokens = long.split()
-            bowler = self.bowler_to_batter_to_outcome[i][0]
-            batter = self.bowler_to_batter_to_outcome[i][1]
-            j = 0
-            for w in tokens:
-                wbo = similarity(w, bowler)
-                wba = similarity(w, batter)
-                if wbo > 0.8:   #   can sort these out in a more nice way by preprocessing text and reformatting at end
-                    if w[-2:] == '\'s':
-                        tokens[j] = 'BOWLER\'s'
-                    elif w[-1:] == ',':
-                        tokens[j] = 'BOWLER,'
-                    else:
-                        tokens[j] = 'BOWLER'
-                if wba > 0.8:
-                    if w[-2:] == '\'s':
-                        tokens[j] = 'BATTER\'s'
-                    elif w[-1:] == ',':
-                        tokens[j] = 'BATTER,'
-                    else:
-                        tokens[j] = 'BATTER'
-                j = j + 1
-            i = i + 1
-            self.long_comments.append(' '.join(tokens))
-    '''
-
     def scrapeAll(self):
         i = 1
         self.createSequenceFiles()
@@ -260,15 +200,32 @@ class CricinfoScraper:
                     self.teams[i].append(b)
         print(self.teams[0])
         print(self.teams[1])
+        self.createTeams(self.teams)
+        return self.teams
+
+    def createTeams(self, playerNames):
+        for playerName in playerNames[0]:
+            p = player(playerName)
+            self.allNames.append(p.names)
+            self.players.append(p)
+        for playerName in playerNames[1]:
+            p = player(playerName)
+            self.allNames.append(p.names, True)
+            self.players.append(p)
+
+    def playerSwitchInnings(self):
+        for p in self.players:
+            p.bowlingTeam = not p.bowlingTeam
 
     def scrape(self, address):  #  scrape and clean the long and short comments
         # reset the sequences for next page
         self.outcomeEmissions = {}
         self.outcomeSequence = []
-        self.scrollToBottom()
 
         self.driver.get(address)
         self.content = self.driver.page_source
+
+        self.scrollToBottom()
         self.soup = BeautifulSoup(self.content, features="html.parser")
 
         self.extractOutcomeAndComment() # <---
@@ -276,6 +233,7 @@ class CricinfoScraper:
         #  next innings
         self.driver.execute_script("window.scrollTo(0, " + str(500) + ")")
         self.switchInnings()
+        self.playerSwitchInnings()
         self.scrollToBottom()
 
         self.content = self.driver.page_source
@@ -283,6 +241,24 @@ class CricinfoScraper:
 
         self.extractOutcomeAndComment() # <---
 
+    def scrollToBottom(self):
+        Y = 1000
+        last = 0
+        zeroCount = 0
+        while True:
+            self.driver.execute_script("window.scrollTo(0, " + str(Y) + ")")
+            Y = Y + 2000
+            self.content = self.driver.page_source
+            soup = BeautifulSoup(self.content, features="html.parser")
+            temp = len(soup.text)
+            if temp - last == 0:
+                zeroCount = zeroCount + 1
+                if zeroCount > 10:
+                    print('scrolling complete')
+                    break
+            else:
+                zeroCount = 0
+            last = temp
 
     def switchInnings(self):
         if self.cookieClickNeeded:
