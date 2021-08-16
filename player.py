@@ -7,13 +7,18 @@ class player:
         self.bowlingTeam = bowlingTeam
         names = name.split()    #(c)  †  (c)†
         key = ['(c)', '(c)†', '†']
-        self.captain = names.contains('(c)') or names.contains('(c)†')
-        self.keeper = names.contains('†') or names.contains('(c)†')
+        self.captain = '(c)' in names or '(c)†' in names
+        self.keeper = '†' in names or '(c)†' in names
         for name in names:
             if name not in key:
                 self.names.append(name)
 
-    def score(self, word):
-        if word in self.names:
-            return True
+    def score(self, words):
+        score = 0
+        for word in words:
+            if word in self.names:  #simple, consider with similarity
+                score = score + 1
+        return score
 
+    def printout(self):
+        print(' '.join(self.names), self.bowlingTeam)

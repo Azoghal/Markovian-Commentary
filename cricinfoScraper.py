@@ -7,6 +7,12 @@ from selenium.webdriver import ActionChains
 from bs4 import BeautifulSoup
 from difflib import SequenceMatcher
 import pandas
+import nltk
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
 
 from player import player
 
@@ -51,15 +57,17 @@ class CricinfoScraper:
             else:
                 longComment = a.contents[1].text
             bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
+            #bowler.printout()
+            #batter.printout()
             outcome = self.translateOutcome(outcome)
             outcome = outcome.replace(' ', '_')
-            cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)  # v =-----
+            #cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)  # v =-----
+            cleanedComment = self.cleanBowlerBatterNew(longComment, bowler, batter)  # v =-----
             self.outcomeSequence.append(outcome)
             if outcome in self.outcomeEmissions:
                 self.outcomeEmissions[outcome].append(cleanedComment)
             else:
                 self.outcomeEmissions[outcome] = [cleanedComment]
-            # there is a need to check for both names
         self.outcomeSequence.append('END')
         print('balls in innings :', self.inningsBalls)
         self.totalBalls = self.totalBalls + self.inningsBalls
@@ -102,9 +110,50 @@ class CricinfoScraper:
                 break
             i = i + 1
         outcome = ' '.join(shortWords[end + 1:len(shortWords)])
-        return bowler, batter, outcome
+        bowlerP = self.findBestPlayerMatch(bowler.split())
+        batterP = self.findBestPlayerMatch(batter.split())
+        return bowlerP, batterP, outcome
 
-    def cleanBowlerBatter(self, longComment, bowler, batter, handlePunctuation=False):  # <--------- test, sort out first and surnames
+    def cleanBowlerBatterNew(self, longComment, bowler, batter): # now bowler and batter are player objects
+        longWords = nltk.word_tokenize(longComment)
+        #print(longWords)
+        cleanedWords = []
+        buffer = []
+        for word in longWords:
+            if word in self.allNames:
+                buffer.append(word)
+            else:
+                if len(buffer) > 0:
+                    match = self.findBestPlayerMatch(buffer)
+                    # find from match if bowler or batter, otherwise fielder (or non batting batter)
+                    if match is None:
+                        cleanedWords.append(buffer)
+                    else:
+                        if match == bowler and match.bowlingTeam:
+                            cleanedWords.append('BOWLER')
+                        elif match == batter and not match.bowlingTeam:
+                            cleanedWords.append('BATTER')
+                        else:
+                            cleanedWords.append('FIELDER' if match.bowlingTeam else 'BATTER') # in this case BATTER should
+                buffer = []
+                cleanedWords.append(word)                                      # represent a batsman who is not currently in
+        #print(cleanedWords)
+        return ' '.join(cleanedWords)
+
+    def findBestPlayerMatch(self, words):  # move all player things into a playerBase class?
+        matchDict = {}
+        best = 0
+        for p in self.players:
+            score = p.score(words)
+            if score >= best:
+                matchDict[score] = p
+                best = score
+        if best > 0:
+            return matchDict[best]
+        else:
+            return None
+
+    def cleanBowlerBatter(self, longComment, bowler, batter, handlePunctuation=False):  # being deprecated
         longWords = longComment.split()
         cleanedWords = []
         if(handlePunctuation):
@@ -164,6 +213,7 @@ class CricinfoScraper:
                 break
             print('scraping address ' + str(i) +  ' of ' + str(len(self.addresses)))
             self.scrapeTeamList(address[:-1]+'/full-scorecard')
+            print(self.allNames)
             self.scrape(address[:-1]+'/ball-by-ball-commentary') #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
             self.writeSequencesToFiles()
             print('scraped data written to files')
@@ -198,19 +248,21 @@ class CricinfoScraper:
                 for b in nonBatters:
                     b = b.lstrip().rstrip()
                     self.teams[i].append(b)
-        print(self.teams[0])
-        print(self.teams[1])
+        #print(self.teams[0])
+        #print(self.teams[1])
         self.createTeams(self.teams)
         return self.teams
 
     def createTeams(self, playerNames):
         for playerName in playerNames[0]:
-            p = player(playerName)
-            self.allNames.append(p.names)
+            p = player(playerName, True) # due to scraping order, this is correct way around
+            for n in p.names:
+                self.allNames.append(n)
             self.players.append(p)
         for playerName in playerNames[1]:
             p = player(playerName)
-            self.allNames.append(p.names, True)
+            for n in p.names:
+                self.allNames.append(n)
             self.players.append(p)
 
     def playerSwitchInnings(self):
@@ -280,11 +332,9 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 
-scraper = CricinfoScraper('addresses.txt', 2)
+scraper = CricinfoScraper('singleAddress.txt', 4)
 # scraper.scrape()
 # scraper.createSequenceFiles()
-# scraper.scrapeAll()
-for a in scraper.addresses:
-    scraper.scrapeTeamList(a+'/full-scorecard')
-    print()
+scraper.scrapeAll()
+
 
