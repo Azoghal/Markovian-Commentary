@@ -213,7 +213,6 @@ class CricinfoScraper:
                 break
             print('scraping address ' + str(i) +  ' of ' + str(len(self.addresses)))
             self.scrapeTeamList(address[:-1]+'/full-scorecard')
-            print(self.allNames)
             self.scrape(address[:-1]+'/ball-by-ball-commentary') #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
             self.writeSequencesToFiles()
             print('scraped data written to files')
@@ -332,7 +331,7 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 
-scraper = CricinfoScraper('singleAddress.txt', 4)
+scraper = CricinfoScraper('addresses.txt', 4)
 # scraper.scrape()
 # scraper.createSequenceFiles()
 scraper.scrapeAll()
