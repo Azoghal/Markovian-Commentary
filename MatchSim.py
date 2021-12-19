@@ -59,7 +59,6 @@ class inningsState:
         print('Fours:'.rjust(10), str(self.fours).ljust(5))
         print('Sixes:'.rjust(10), str(self.sixes).ljust(5))
         print('Maidens:'.rjust(10), str(self.maidens).ljust(5))
-
         print('Wicket:'.rjust(10), ' '.join(str(key).ljust(5) for key in self.fallOfWickets))
         print('Runs:'.rjust(10), ' '.join(str(self.fallOfWickets[key]).ljust(5) for key in self.fallOfWickets))
 
