@@ -39,10 +39,10 @@ class inningsState:
             if len(self.history) == 6:
                 sixDots = True
                 for b in self.history:
-                    if b.runs >0 or b.overIncrementsBy == 0: # not a dot if runs scored or a wide or a no ball
+                    if b.runs > 0 or b.overIncrementsBy == 0: # not a dot if runs scored or a wide or a no ball
                         sixDots = False
                 if sixDots:
-                    self.maidens = self.maidens + 1
+                    self.history = self.maidens + 1
             if ball.overIncrementsBy == 1:  # don't empty if a bowler extra (at start of over)
                 self.history = []   # empty history for next over
 
@@ -76,17 +76,25 @@ class MatchSim:
         self.models = self.createDictOfModels()
         self.outcomeMarkov = self.models['outcomes.txt']
         self.outcomeDict = self.initialiseOutcomes()
+        self.score = False
+        self.score_each_ball = False
+        self.commentary = False
+        self.match_statistics = False
+        self.match_recap = True
+        self.match_winner = True
         print('madeMatchSim')
 
-    def simulateMatch(self, comm):
-        inningsA = self.simulateOneInnings(commentary=comm)
-        inningsB = self.simulateOneInnings(commentary=comm, target=inningsA.total)
-        inningsA.printStatistics()
-        print()
-        inningsB.printStatistics()
-        self.compareInnings(inningsA, inningsB)
+    def simulateMatch(self):
+        inningsA = self.simulateOneInnings()
+        inningsB = self.simulateOneInnings(target=inningsA.total)
+        if self.match_statistics:
+            inningsA.printStatistics()
+            print()
+            inningsB.printStatistics()
+        if self.match_winner or self.match_recap:
+            self.compareInnings(inningsA, inningsB)
 
-    def simulateOneInnings(self, target=10000, showOutput=True, scoreEveryBall=False, commentary=False):
+    def simulateOneInnings(self, target=10000):
         inState = inningsState()
         prefix = [('START' + str(i)) for i in range(self.outcome_n, self.com_n)]
         while inState.legalBalls < 300 and inState.wickets < 10 and inState.total <= target:
@@ -98,10 +106,10 @@ class MatchSim:
             prefix[self.outcome_n-1] = word
             thisModel = self.models[word + '.txt']
             inState.updateState(self.outcomeDict[word])
-            if showOutput:
-                if commentary:  # risk of infinite loop if destined for END
+            if self.score:
+                if self.commentary:  # risk of infinite loop if destined for END
                     print(word.ljust(15), ':', thisModel.generate_sequence(thisModel.startPrefix, 30)[7*self.com_n-1:])
-                if scoreEveryBall:
+                if self.score_each_ball:
                     inState.printState()
                 else:
                     if inState.legalBalls % 6 == 0 or inState.wickets == 10:
@@ -112,18 +120,20 @@ class MatchSim:
 
     def compareInnings(self, first, second):
         print()
-        print('First Innings: ')
-        first.printState()
-        print('Second Innings: ')
-        second.printState()
+        if self.match_recap:
+            print('First Innings: ')
+            first.printState()
+            print('Second Innings: ')
+            second.printState()
         firstTotal = first.runs + first.extras
         secondTotal = second.runs + second.extras
-        if firstTotal > secondTotal:
-            print('Team A wins by', firstTotal - secondTotal, 'runs!')
-        elif firstTotal == secondTotal:
-            print('It\'s a tie!')
-        else:
-            print('Team B wins by', 10-second.wickets, 'wickets!')
+        if self.match_winner:
+            if firstTotal > secondTotal:
+                print('Team A wins by', firstTotal - secondTotal, 'runs!')
+            elif firstTotal == secondTotal:
+                print('It\'s a tie!')
+            else:
+                print('Team B wins by', 10-second.wickets, 'wickets!')
 
     def createDictOfModels(self):
         models = {}
@@ -158,6 +168,7 @@ class MatchSim:
         outcomeDict['4_runs'] =                     outcome('4_runs',           4, 0, 1, 0)
         outcomeDict['4_byes'] =                     outcome('4_byes',           0, 4, 1, 0)
         outcomeDict['4_leg_byes'] =                 outcome('4_leg_byes',       0, 4, 1, 0)
+        outcomeDict['5_runs'] =                     outcome('5_runs',           5, 0, 1, 0)
         outcomeDict['5_wide'] =                     outcome('5_wide',           0, 5, 0, 0)
         outcomeDict['6_runs'] =                     outcome('6_runs',           6, 0, 1, 0)
         outcomeDict['no_run'] =                     outcome('no_run',           0, 0, 1, 0)
@@ -165,7 +176,7 @@ class MatchSim:
         return outcomeDict
 
 Ms = MatchSim('scrapedSequences', com_n=4, outcome_n=2)  # scrapedSequences # 9-matches-punctuation-in-word
-Ms.simulateMatch(comm=True)
+Ms.simulateMatch()
 
 
 '''         # find an innings with at least 400 runs
