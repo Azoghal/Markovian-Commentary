@@ -12,6 +12,7 @@ class MarkovComments:
         #self.tokens_distinct = list(set(self.tokens))
         self.tokens_to_id, self.id_to_tokens = MarkovComments.create_indices(self.tokens)
         self.n = n
+        self.file_prefix_length = 4 # TODO switch to learning this from the file
         self.ngrams, self.ngrams_distinct = self.create_ngrams()
         self.ngrams_to_id, self.id_to_ngrams = MarkovComments.create_indices(self.ngrams)
         self.transition_matrix_prob = self.create_transition_matrix_prob()
@@ -75,7 +76,6 @@ class MarkovComments:
 
         token_id = np.random.choice(range(len(weights)), p=weights)
         next_word = self.id_to_tokens[token_id]
-
         return next_word
 
     def generate_sequence(self, seed, k=10, temperature=1):

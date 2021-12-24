@@ -1,4 +1,5 @@
 import os
+import warnings
 
 from MarkovComments import MarkovComments
 
@@ -95,12 +96,19 @@ class MatchSim:
             self.compareInnings(inningsA, inningsB)
 
     def simulateOneInnings(self, target=10000):
+        #print('starting innings simulation')
         inState = inningsState()
         prefix = [('START' + str(i)) for i in range(self.outcome_n, self.com_n)]
         while inState.legalBalls < 300 and inState.wickets < 10 and inState.total <= target:
             word = 'END'
+            count = 0
             while word == 'END':
+                if count == 20:
+                    print('have looped ',count,' times for ',' '.join(prefix))
+                    prefix = [('START' + str(i)) for i in range(self.outcome_n, self.com_n)]
+                    warnings.warn('escaping end loop by switching prefix ' + ' '.join(prefix))
                 word = self.outcomeMarkov.generate_next_word(' '.join(prefix))  # do not allow match to end early
+                count += 1
             for ind in range(self.outcome_n-1):
                 prefix[ind] = prefix[ind+1]
             prefix[self.outcome_n-1] = word
@@ -116,6 +124,7 @@ class MatchSim:
                         inState.printState()
                         print()
         # print(self.outcomeMarkov.generate_sequence('START', 5)[6:])    #  for outcomes.txt n = 1
+        #print('finished innings simulation')
         return inState
 
     def compareInnings(self, first, second):
@@ -175,8 +184,8 @@ class MatchSim:
         outcomeDict['OUT'] =                        outcome('OUT',              0, 0, 1, 1)
         return outcomeDict
 
-Ms = MatchSim('scrapedSequences', com_n=4, outcome_n=2)  # scrapedSequences # 9-matches-punctuation-in-word
-Ms.simulateMatch()
+#Ms = MatchSim('scrapedSequences', com_n=4, outcome_n=2)  # scrapedSequences # 9-matches-punctuation-in-word
+#Ms.simulateMatch()
 
 
 '''         # find an innings with at least 400 runs
