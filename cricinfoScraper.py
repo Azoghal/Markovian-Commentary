@@ -7,6 +7,7 @@ from selenium.webdriver import ActionChains
 from bs4 import BeautifulSoup
 from difflib import SequenceMatcher
 import pandas
+from collections import deque
 import nltk
 try:
     nltk.data.find('tokenizers/punkt')
@@ -25,7 +26,7 @@ class CricinfoScraper:
         self.addresses = open(addressfile, 'r').readlines()
         self.maxNgramLength = maxNgramLength    # allows n START tokens to be added at beginning to facilatate ngrams
         self.outcomeEmissions = {}  # dict of outcome: array of emissions
-        self.outcomeSequence = []  # array of outcomes to use to do transition probabilities
+        self.outcomeSequence = [] # array of outcomes to use to do transition probabilities
         self.driver = webdriver.Chrome("C:/Users/sambe/chromedriver_win32/chromedriver.exe")
         self.cookieClickNeeded = True
         self.totalBalls = 0
@@ -48,6 +49,7 @@ class CricinfoScraper:
         self.inningsBalls = 0
         for i in range(self.maxNgramLength):
             self.outcomeSequence.append('START'+str(i))
+        outcomes_temp = deque() # reads from top to bottom, so need to prepend  to keep correct order
         self.soup = BeautifulSoup(self.driver.page_source, features='html.parser')
         for a in self.soup.findAll('div', attrs={'class': 'match-comment-wrapper'}):
             shortComment = a.contents[0].text
@@ -63,11 +65,13 @@ class CricinfoScraper:
             outcome = outcome.replace(' ', '_')
             #cleanedComment = self.cleanBowlerBatter(longComment, bowler, batter, handlePunctuation=False)  # v =-----
             cleanedComment = self.cleanBowlerBatterNew(longComment, bowler, batter)  # v =-----
-            self.outcomeSequence.append(outcome)
+            outcomes_temp.appendleft(outcome)
+            #self.outcomeSequence.append(outcome)
             if outcome in self.outcomeEmissions:
                 self.outcomeEmissions[outcome].append(cleanedComment)
             else:
                 self.outcomeEmissions[outcome] = [cleanedComment]
+        self.outcomeSequence = self.outcomeSequence + list(outcomes_temp)
         self.outcomeSequence.append('END')
         print('balls in innings :', self.inningsBalls)
         self.totalBalls = self.totalBalls + self.inningsBalls
