@@ -21,8 +21,8 @@ class MatchExperimenter:
 
     def __init__(self):
         self.match_simulator = None
-        self.innings_dicts = self.load_innings_to_dict()
-        self.innings_df = self.undictify_innings(self.innings_dicts)
+        self.innings_dicts = self.__class__.load_innings_to_dict()
+        self.innings_df = self.__class__.undictify_innings(self.innings_dicts)
         self.limits = self.get_limits()
         # SINGLE INNINGS
         # DONE: plot distribution of total runs
@@ -134,7 +134,8 @@ class MatchExperimenter:
             bin_size = 2*int(math.ceil(float(dif + 1) / float(unique)))  # plus one to centre on integers?
         print('chosen bin size:', bin_size)
         bin_start, bin_end = min - 0.5, max + 0.5
-        bins = np.arange(bin_start, bin_end, bin_size)
+        print(bin_start,bin_end)
+        bins = np.arange(bin_start, bin_end+0.1, bin_size)
         return bins
 
     def cumulative_frequency_curve(self, key):
