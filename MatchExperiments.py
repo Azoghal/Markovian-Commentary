@@ -182,8 +182,32 @@ class MatchExperimenter:
         mp.ylabel(y_key)
         mp.show()
 
+    def basic_worm_plot(self):  # worm plots are usually ball by ball. this will follow, pending changes to matchsim
+        #min, max, unique = self.limits['total']  # to work out linspace
+        fig, sample_chart = mp.subplots()
+        #for index in self.innings_df.index:
+        index = 0
+        end_total = self.innings_df['total'][index]
+        fall_of_wickets = self.innings_df['fallOfWickets'][index]
+        wickets = [0]
+        runs = [0]
+        for key, value in fall_of_wickets.items():
+            wickets.append(int(key))
+            runs.append(value)
+        wickets.append(11)
+        runs.append(end_total)
+        sample_chart.plot(wickets, runs, '-bo', alpha=1)
+        sample_chart.scatter(wickets,runs)
+        mp.xlabel(key)
+        mp.show()
+
+    def worm_plot(self):
+        print('not yet implemented')
+
 
 ME = MatchExperimenter()
+ME.basic_worm_plot()
+'''
 ME.innings_histogram_from_key('total')
 ME.innings_histogram_from_key('fours')
 ME.innings_histogram_from_key('sixes')
@@ -192,13 +216,4 @@ ME.innings_histogram_from_key('totalBalls')
 ME.scatter_plot_histograms_from_keys('wickets', 'runs')
 ME.cumulative_frequency_curve('runs')
 ME.cumulative_frequency_curve('wickets')
-
-'''
-ME.innings_histogram_from_key('total', bins=50)
-ME.innings_histogram_from_key('wickets', bins=10)
-ME.innings_histogram_from_key('fours', bins=40)
-ME.innings_histogram_from_key('sixes', bins=20)
-ME.innings_histogram_from_key('extras', bins=35)
-ME.innings_histogram_from_key('runs', bins=40)
-ME.innings_histogram_from_key('maidens', bins=10)
 '''
