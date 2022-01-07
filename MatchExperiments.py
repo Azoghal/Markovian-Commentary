@@ -21,9 +21,9 @@ class MatchExperimenter:
 
     def __init__(self):
         self.match_simulator = None
-        self.innings_dicts = self.__class__.load_innings_to_dict()
-        self.innings_df = self.__class__.undictify_innings(self.innings_dicts)
-        self.limits = self.get_limits()
+        self.innings_dicts = None
+        self.innings_df = None
+        self.limits = None
         # SINGLE INNINGS
         # DONE: plot distribution of total runs
         # TODO: plot overlay of worms
@@ -41,6 +41,16 @@ class MatchExperimenter:
         # TODO: compile data (another scraper?)
         # TODO: plot graphs
         # TODO: compare, fine tune model?
+
+    def run_and_load_in(self,n=10000):
+        self.create_match_sim()
+        self.run_and_save_n(n)
+        self.load_in()
+
+    def load_in(self):
+        self.innings_dicts = self.__class__.load_innings_to_dict()
+        self.innings_df = self.__class__.undictify_innings(self.innings_dicts)
+        self.limits = self.get_limits()
 
     def create_match_sim(self):
         self.match_simulator = MatchSim.MatchSim('scrapedSequences', com_n=4, outcome_n=2)
@@ -67,6 +77,7 @@ class MatchExperimenter:
                        'totalBalls': innings.totalBalls,
                        'legalBalls': innings.legalBalls,
                        'fallOfWickets': innings.fallOfWickets,
+                       'total_and_wickets_each_over': innings.total_and_wickets_each_over,
                        'fours': innings.fours,
                        'sixes': innings.sixes,
                        'maidens': innings.maidens}
@@ -75,7 +86,7 @@ class MatchExperimenter:
 
     @staticmethod
     def undictify_innings(all_innings):    # convert to pandas dataframe
-        innings_df = pandas.DataFrame.from_dict(all_innings,orient='index')
+        innings_df = pandas.DataFrame.from_dict(all_innings, orient='index')
         return innings_df
 
     def get_limits(self):
@@ -141,12 +152,15 @@ class MatchExperimenter:
     def cumulative_frequency_curve(self, key):
         values = self.innings_df[key]
         n = len(values)
+        min,max, unique = self.limits[key]
+        n = max-min
         values, base = np.histogram(values, bins=n)
         print(base)
         print(values)
         cumulative = np.cumsum(values)
+        print(cumulative)
         fig, sample_chart = mp.subplots()
-        sample_chart.plot(base[:-1], 100*cumulative/n, c='blue')
+        sample_chart.plot(base[:-1], cumulative/10, c='blue')
         mp.yticks(np.arange(0, 100 + 1, 10.0))
         mp.xlabel(key)
         mp.show()
@@ -182,38 +196,132 @@ class MatchExperimenter:
         mp.ylabel(y_key)
         mp.show()
 
-    def basic_worm_plot(self):  # worm plots are usually ball by ball. this will follow, pending changes to matchsim
-        #min, max, unique = self.limits['total']  # to work out linspace
+    def worm_plot(self,n=10):
         fig, sample_chart = mp.subplots()
-        #for index in self.innings_df.index:
-        index = 0
-        end_total = self.innings_df['total'][index]
-        fall_of_wickets = self.innings_df['fallOfWickets'][index]
-        wickets = [0]
-        runs = [0]
-        for key, value in fall_of_wickets.items():
-            wickets.append(int(key))
-            runs.append(value)
-        wickets.append(11)
-        runs.append(end_total)
-        sample_chart.plot(wickets, runs, '-bo', alpha=1)
-        sample_chart.scatter(wickets,runs)
-        mp.xlabel(key)
+        alpha = 1 if n <= 10 else 0.05
+        show_wickets = n <= 10
+        col = None if n <= 10 else 'b'
+        for index in range(n):
+            #index = 3
+            sample_points = self.innings_df['total_and_wickets_each_over'][index]
+            end_total = self.innings_df['total'][index]
+            end_overs = (self.innings_df['legalBalls'][index]//6) + (self.innings_df['legalBalls'][index]%6)/10
+            end_wickets = self.innings_df['wickets'][index]
+
+
+            current_wickets = 0
+            wicket_overs = []
+            wicket_over_runs = []
+            runs = [0]
+            overs = [0]
+            for over, pair in enumerate(sample_points,1):
+                if pair[1] > current_wickets:
+                    wicket_overs.append(over)
+                    wicket_over_runs.append(pair[0])
+                    current_wickets += 1
+                runs.append(pair[0])
+                overs.append(over)
+            if runs[-1] != end_total:
+                runs.append(end_total)
+                overs.append(end_overs)
+            if current_wickets != end_wickets:
+                for k in range(end_wickets-current_wickets):
+                    wicket_overs.append(end_overs)
+                    wicket_over_runs.append(end_total)
+            sample_chart.plot(overs, runs, c=col, alpha=alpha)
+            if show_wickets:
+                sample_chart.scatter(wicket_overs, wicket_over_runs)
+        mp.xlabel('overs')
+        mp.ylabel('runs')
         mp.show()
 
-    def worm_plot(self):
-        print('not yet implemented')
+    def get_win_percentage(self,total, verbose=True):
+        values = self.innings_df['runs']
+        n = len(values)
+        min, max, unique = self.limits['runs']
+        if total < min:
+            if verbose:
+                print('lower than minimum simulated, close to 0% chance to win')
+            return 0.
+        if total > max:
+            if verbose:
+                print('higher than maximum simulated, close to 100% chance to win')
+            return 1.
+        n = max - min
+        values, base = np.histogram(values, bins=n)
+        cumulative = np.cumsum(values)
+        if verbose:
+            print(cumulative[total-min]/10, '% chance to win with', total,'runs')
+        return cumulative[total-min]/1000
 
+    def make_first_innings_win_prediction(self, runs, wickets, balls, search_num=50):
+        #finish simulating first innings, then use static win percentage
+        #can do monte carlo and simulate many times
+        if self.match_simulator is None:
+            self.create_match_sim()
+        total_runs = 0
+        total_prob = 0
+        for i in range(search_num):
+            innings_state = MatchSim.inningsState()
+            innings_state.runs = runs
+            innings_state.total = runs
+            innings_state.wickets = wickets
+            innings_state.totalBalls = balls
+            innings_state.legalBalls = balls
+            innings_state.fallOfWickets = {n+1: runs for n in range(wickets)}
+            result = self.match_simulator.simulateOneInnings(continue_from=innings_state)
+            total_prob += self.get_win_percentage(result.total,verbose=False)
+            total_runs += result.total
+        print('average:', total_runs/search_num)
+        chance_to_win_1 = self.get_win_percentage(total_runs//search_num, verbose=False)
+        print('chance to win based on chance to win with average runs:', chance_to_win_1)
+        chance_to_win_2 = total_prob/search_num
+        print('chance to win based on average of chance to win over all sims:', chance_to_win_2)
+
+
+    def make_second_innings_win_prediction(self, runs, wickets, balls, first_innings_runs, search_num=200):
+        #finish simulating first innings, then use static win percentage
+        #can do monte carlo and simulate many times
+        if self.match_simulator is None:
+            self.create_match_sim()
+        target_runs = first_innings_runs
+        wins = 0
+        draws = 0
+        for i in range(search_num):
+            innings_state = MatchSim.inningsState()
+            innings_state.runs = runs
+            innings_state.total = runs
+            innings_state.wickets = wickets
+            innings_state.totalBalls = balls
+            innings_state.legalBalls = balls
+            innings_state.fallOfWickets = {n+1: runs for n in range(wickets)}
+            result = self.match_simulator.simulateOneInnings(target=target_runs,continue_from=innings_state)
+            if result.total > target_runs:
+                wins += 1
+            elif result.total == target_runs:
+                draws += 1
+        losses = search_num - (wins + draws)
+        print('win:', wins/search_num, ' draw:', draws/search_num, ' lose:', losses/search_num)
 
 ME = MatchExperimenter()
-ME.basic_worm_plot()
+#ME.run_and_load_in(1000)
+ME.load_in()
+ME.make_first_innings_win_prediction(46, 4, 60)   # runs, wickets, balls
+ME.make_second_innings_win_prediction(190, 6, 290 , 200)   # runs, wickets, balls
+
 '''
+ME.get_win_percentage(150)
+ME.get_win_percentage(250)
+ME.get_win_percentage(280)
+ME.get_win_percentage(330)
+ME.worm_plot(n=10)
+ME.worm_plot(n=100)
 ME.innings_histogram_from_key('total')
 ME.innings_histogram_from_key('fours')
 ME.innings_histogram_from_key('sixes')
 ME.innings_histogram_from_key('wickets')
 ME.innings_histogram_from_key('totalBalls')
 ME.scatter_plot_histograms_from_keys('wickets', 'runs')
-ME.cumulative_frequency_curve('runs')
+ME.cumulative_frequency_curve('total')
 ME.cumulative_frequency_curve('wickets')
 '''
