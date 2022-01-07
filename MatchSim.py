@@ -24,6 +24,7 @@ class inningsState:
         self.fallOfWickets = {}
         self.fours = 0
         self.sixes = 0
+        self.total_and_wickets_each_over = []   # up to 50 match state tuples (total,wickets)
         self.history = []
         self.maidens = 0
 
@@ -37,6 +38,8 @@ class inningsState:
         self.history.append(ball)
         self.updateStatistics(ball)
         if self.legalBalls % 6 == 0: # at end of over (and not at first ball of )
+            if self.legalBalls//6 > len(self.total_and_wickets_each_over):
+                self.total_and_wickets_each_over.append((self.total, self.wickets))
             if len(self.history) == 6:
                 sixDots = True
                 for b in self.history:
@@ -46,6 +49,7 @@ class inningsState:
                     self.history = self.maidens + 1
             if ball.overIncrementsBy == 1:  # don't empty if a bowler extra (at start of over)
                 self.history = []   # empty history for next over
+
 
 
     def updateStatistics(self, ball):
@@ -95,16 +99,19 @@ class MatchSim:
         if self.match_winner or self.match_recap:
             self.compareInnings(inningsA, inningsB)
 
-    def simulateOneInnings(self, target=10000):
+    def simulateOneInnings(self, target=10000, continue_from=None):
         #print('starting innings simulation')
-        inState = inningsState()
+        if continue_from is None:
+            inState = inningsState()
+        else:
+            inState = continue_from
         prefix = [('START' + str(i)) for i in range(self.outcome_n, self.com_n)]
         while inState.legalBalls < 300 and inState.wickets < 10 and inState.total <= target:
             word = 'END'
             count = 0
             while word == 'END':
                 if count == 20:
-                    print('have looped ',count,' times for ',' '.join(prefix))
+                    #print('have looped ',count,' times for ',' '.join(prefix))
                     prefix = [('START' + str(i)) for i in range(self.outcome_n, self.com_n)]
                     warnings.warn('escaping end loop by switching prefix ' + ' '.join(prefix))
                 word = self.outcomeMarkov.generate_next_word(' '.join(prefix))  # do not allow match to end early
