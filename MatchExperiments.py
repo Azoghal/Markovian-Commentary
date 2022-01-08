@@ -26,7 +26,7 @@ class MatchExperimenter:
         self.limits = None
         # SINGLE INNINGS
         # DONE: plot distribution of total runs
-        # TODO: plot overlay of worms
+        # DONE: plot overlay of worms
         # DONE: plot distribution of wickets taken
         # DONE: plot distribution of boundaries
         # TODO: plot distribution over different window sizes?
@@ -235,8 +235,8 @@ class MatchExperimenter:
         mp.ylabel('runs')
         mp.show()
 
-    def get_win_percentage(self,total, verbose=True):
-        values = self.innings_df['runs']
+    def get_win_percentage(self,total, verbose=True):   # large number pre simulated innings
+        values = self.innings_df['runs']                # so better to use those than recompute for monte carlo
         n = len(values)
         min, max, unique = self.limits['runs']
         if total < min:
@@ -254,8 +254,8 @@ class MatchExperimenter:
             print(cumulative[total-min]/10, '% chance to win with', total,'runs')
         return cumulative[total-min]/1000
 
-    def make_first_innings_win_prediction(self, runs, wickets, balls, search_num=50):
-        #finish simulating first innings, then use static win percentage
+    def make_first_innings_win_prediction(self, runs, wickets, balls, search_num=50): # monte carlo to finish innings
+        #finish simulating first innings, then use static win percentage              # and then use precomputed
         #can do monte carlo and simulate many times
         if self.match_simulator is None:
             self.create_match_sim()
@@ -280,7 +280,7 @@ class MatchExperimenter:
 
 
     def make_second_innings_win_prediction(self, runs, wickets, balls, first_innings_runs, search_num=200):
-        #finish simulating first innings, then use static win percentage
+        #finish simulating first innings, then use static win percentage    # monte carlo forward to find % of sims won
         #can do monte carlo and simulate many times
         if self.match_simulator is None:
             self.create_match_sim()
@@ -307,9 +307,9 @@ ME = MatchExperimenter()
 #ME.run_and_load_in(1000)
 ME.load_in()
 ME.make_first_innings_win_prediction(46, 4, 60)   # runs, wickets, balls
-ME.make_second_innings_win_prediction(190, 6, 290 , 200)   # runs, wickets, balls
+ME.make_second_innings_win_prediction(190, 6, 290, 200)   # runs, wickets, balls
 
-'''
+
 ME.get_win_percentage(150)
 ME.get_win_percentage(250)
 ME.get_win_percentage(280)
@@ -324,4 +324,4 @@ ME.innings_histogram_from_key('totalBalls')
 ME.scatter_plot_histograms_from_keys('wickets', 'runs')
 ME.cumulative_frequency_curve('total')
 ME.cumulative_frequency_curve('wickets')
-'''
+

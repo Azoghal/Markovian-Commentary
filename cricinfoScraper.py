@@ -76,6 +76,24 @@ class CricinfoScraper:
         print('balls in innings :', self.inningsBalls)
         self.totalBalls = self.totalBalls + self.inningsBalls
 
+    def extractOutcome(self):
+        self.inningsBalls = 0
+        for i in range(self.maxNgramLength):
+            self.outcomeSequence.append('START'+str(i))
+        outcomes_temp = deque() # reads from top to bottom, so need to prepend  to keep correct order
+        self.soup = BeautifulSoup(self.driver.page_source, features='html.parser')
+        for a in self.soup.findAll('div', attrs={'class': 'match-comment-wrapper'}):
+            shortComment = a.contents[0].text
+            self.inningsBalls = self.inningsBalls + 1
+            bowler, batter, outcome = self.extractBowlerBatterOutcome(shortComment)
+            outcome = self.translateOutcome(outcome)
+            outcome = outcome.replace(' ', '_')
+            outcomes_temp.appendleft(outcome)
+        self.outcomeSequence = self.outcomeSequence + list(outcomes_temp)
+        self.outcomeSequence.append('END')
+        print('balls in innings :', self.inningsBalls)
+        self.totalBalls = self.totalBalls + self.inningsBalls
+
     def createSequenceFiles(self):
         save_path = 'scrapedSequences/'
         address = os.getcwd()+'/scrapedSequences'
@@ -208,7 +226,7 @@ class CricinfoScraper:
                 cleanedWords.append(word)
         return ' '.join(cleanedWords)
 
-    def scrapeAll(self):
+    def scrapeAll(self, outcomes_only=False):
         i = 1
         self.createSequenceFiles()
         for address in self.addresses:
@@ -216,8 +234,9 @@ class CricinfoScraper:
                 print('empty address')
                 break
             print('scraping address ' + str(i) +  ' of ' + str(len(self.addresses)))
-            self.scrapeTeamList(address[:-1]+'/full-scorecard')
-            self.scrape(address[:-1]+'/ball-by-ball-commentary') #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
+            if not outcomes_only:
+                self.scrapeTeamList(address[:-1]+'/full-scorecard')
+            self.scrape(address[:-1]+'/ball-by-ball-commentary', outcomes_only=outcomes_only) #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
             self.writeSequencesToFiles()
             print('scraped data written to files')
             i = i + 1
@@ -272,7 +291,7 @@ class CricinfoScraper:
         for p in self.players:
             p.bowlingTeam = not p.bowlingTeam
 
-    def scrape(self, address):  #  scrape and clean the long and short comments
+    def scrape(self, address, outcomes_only=False):  #  scrape and clean the long and short comments
         # reset the sequences for next page
         self.outcomeEmissions = {}
         self.outcomeSequence = []
@@ -283,7 +302,10 @@ class CricinfoScraper:
         self.scrollToBottom()
         self.soup = BeautifulSoup(self.content, features="html.parser")
 
-        self.extractOutcomeAndComment() # <---
+        if outcomes_only:
+            self.extractOutcome()
+        else:
+            self.extractOutcomeAndComment() # <---
 
         #  next innings
         self.driver.execute_script("window.scrollTo(0, " + str(500) + ")")
@@ -294,7 +316,10 @@ class CricinfoScraper:
         self.content = self.driver.page_source
         self.soup = BeautifulSoup(self.content, features="html.parser")
 
-        self.extractOutcomeAndComment() # <---
+        if outcomes_only:
+            self.extractOutcome()
+        else:
+            self.extractOutcomeAndComment()
 
     def scrollToBottom(self):
         Y = 1000
