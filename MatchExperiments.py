@@ -134,8 +134,11 @@ class MatchExperimenter:
         with open(name, 'r') as readfile:
             return json.load(readfile)
 
-    def calculate_bin_limits(self, key):
-        min, max, unique = self.limits[key]
+    def calculate_bin_limits(self, key, mmu=None):
+        if mmu is None:
+            min, max, unique = self.limits[key]
+        else:
+            min, max, unique = mmu
         dif = max - min  # min: 2, max:4, values = 2,3,4 then we need > 2 unique values to have 3 equal bins
         if unique > dif:  # pigeon hole, with bin size 1 we can have at least one value per bin.
             bin_size = 1
@@ -165,11 +168,27 @@ class MatchExperimenter:
         mp.xlabel(key)
         mp.show()
 
+    def innings_histogram_from_file(self, filename, key):
+        with open(filename,'r') as f:
+            values = []
+            v = f.readline()
+            while v:
+                values.append(int(v))
+                v = f.readline()
+            print(values[0:10])
+            print(len(values))
+            bins =  np.arange(-0.5, 500.51, 10)
+            fig, sample_chart = mp.subplots()
+            sample_chart.hist(values, bins=bins)
+            mp.xlabel(key)
+            mp.show()
+
+
     def innings_histogram_from_key(self, key):
         print('getting', key, 'distribution')
         values = self.innings_df[key]
         bins = self.calculate_bin_limits(key)
-        print(bins)
+        #print(bins)
         fig, sample_chart = mp.subplots()
         sample_chart.hist(values, bins=bins)
         mp.xlabel(key)
@@ -306,6 +325,8 @@ class MatchExperimenter:
 ME = MatchExperimenter()
 #ME.run_and_load_in(1000)
 ME.load_in()
+ME.innings_histogram_from_file('scores.txt','scores')
+'''
 ME.make_first_innings_win_prediction(46, 4, 60)   # runs, wickets, balls
 ME.make_second_innings_win_prediction(190, 6, 290, 200)   # runs, wickets, balls
 
@@ -324,4 +345,4 @@ ME.innings_histogram_from_key('totalBalls')
 ME.scatter_plot_histograms_from_keys('wickets', 'runs')
 ME.cumulative_frequency_curve('total')
 ME.cumulative_frequency_curve('wickets')
-
+'''

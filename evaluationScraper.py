@@ -1,14 +1,22 @@
+import json
+import time
+
 import bs4
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver import ActionChains
+
 
 class evaluationScraper:
 
     def __init__(self):
         self.driver = self.driver = webdriver.Chrome("C:/Users/sambe/chromedriver_win32/chromedriver.exe")
         self.content = None
-        self.soup=None
+        self.actionChains = ActionChains(self.driver)
+        self.match_links = None
+        self.summaries = None
+        self.year_links = None
+        self.cookie_click_needed =True
         # TODO: evaluation data needed:
         # TODO: distribution of totals
         # TODO: distribution of wickets
@@ -30,19 +38,116 @@ class evaluationScraper:
         # need to run through a pared back match simulation just for it to keep track of runs and overs
         # to give us the worm data
 
-    def scrape_n_years_back_from_2018(self,n):
+    def find_ODI_and_expand_series(self,link):
+        self.driver.get(link)
+        self.content = self.driver.page_source
+        # first need to find the one day international header (always the next one after tests?)
+        # current plan is to find the titles from the soup
+        # and all the elements
+        # and then filter the elements by which ones have matching text
+        # and then only click through those
+        # hopefully
+        #TODO!!! make faster by expanding and closing. info stays in html
+        soup = BeautifulSoup(self.content, features="html.parser")
+        root = soup.findAll('div', attrs={'class': 'match-section-head'})[1]
+        print('expandning one day section', root.text)
+        ODI_container = root.next_sibling.next_sibling
+        filter = []
+        for ODI_series in ODI_container.contents:
+            if type(ODI_series) is bs4.element.Tag:
+                title = ODI_series.section.div.div.text
+                filter.append(title)
+            #print(ODI_series.contents[0].contents[0].contents[0].text)
+        if self.cookie_click_needed:
+            time.sleep(2)
+            actionChains = ActionChains(self.driver)
+            consent_button = self.driver.find_element_by_id('onetrust-close-btn-container')
+            actionChains.move_to_element(consent_button).click().perform()
+            self.cookie_click_needed = False
+        filtered = []
+        time.sleep(1)
+        elements = self.driver.find_elements_by_class_name('series-summary-block')
+        for element in elements:
+            series_name = element.text.split('\n')[0]
+            if series_name in filter and element not in filtered:
+                filtered.append(element)
+        print(len(filtered),' ODI series found to expand')
+        actionChains = ActionChains(self.driver)
+        for i, element in enumerate(filtered):
+            actionChains.move_to_element(element).click().perform()
+            #double click should be faster but has problems with highlighting header and clicking that instead
+            #actionChains.move_to_element(element).click().pause(0.1).click().move_to_element(element).perform()
+
+    def scrape_total_wickets_and_links(self):
+        print('starting match summary scrape')
+        soup = BeautifulSoup(self.driver.page_source, features="html.parser")
+        summaries = []
+        all_summaries = soup.findAll('div', attrs={'class': ['innings-info-1', 'innings-info-2']})
+        for summary in all_summaries:
+            summaries.append(str(summary.span.text))
+        links = []
+        match_articles = soup.findAll('div', attrs={'class': 'match-articles'})
+        for match_article in match_articles:
+            link = match_article.a.get('href')
+            links.append(link)
+        print(len(summaries),'match summaries and links gathered')
+        self.summaries = summaries
+        self.match_links = links
+        return summaries, links
+
+    def save_scores(self, to_save):
+        with open('saved_scores.txt','w') as f:
+            json.dump({'scores': to_save}, f)
+
+    def load_scores(self):
+        with open('saved_scores.txt', 'r') as f:
+            d = json.load(f)
+            return d['scores']
+
+    def save_score_wicket_files(self, to_save): # TODO make additive
+        scores, wickets = to_save
+        with open('scores.txt','a') as f:
+            for score in scores:
+                f.write(score+'\n')
+        with open('wickets.txt','a') as f:
+            for wicket in wickets:
+                f.write(wicket+'\n')
+
+    def wipe_files(self):
+        print('clearing files')
+        with open('scores.txt', 'w') as f:
+            f.write('')
+        with open('wickets.txt', 'w') as f:
+            f.write('')
+
+    def parse_total_wicket_text(self):#TODO check for empties
+        texts = self.summaries
+        scores = []
+        wickets = []
+        for text in texts:
+            if text not in ['']:
+                score_pair = text.split(' ')[0]
+                split_pair = score_pair.split('/')
+                wicket = '10' if len(split_pair) < 2 else split_pair[1]
+                score = split_pair[0]
+                #print(text, '--->', score, 'for', wickets)
+                scores.append(score)
+                wickets.append(wicket)
+        return scores, wickets
+
+    def scrape_n_year_links_back_from_2018(self,n):
         archive_link = 'https://www.espncricinfo.com/ci/engine/series/index.html'
         end_year = 2018-n
         # open in webdriver and copy links to years into list
         year_links = []
-        print('loading page')
+        print('loading archive page')
         self.driver.get(archive_link)
         self.content = self.driver.page_source
-        print('page loaded')
-        self.soup = BeautifulSoup(self.content, features="html.parser")
-        print('page souped')
+        print('archive page loaded')
+        soup = BeautifulSoup(self.content, features="html.parser")
+        print('archive page souped')
         break_flag = False
-        for decade in self.soup.findAll('section', attrs={'class': 'season-links'}):
+        for decade in soup.findAll('section', attrs={'class': 'season-links'}):
             if break_flag:
                 break
             for season in decade:
@@ -59,8 +164,25 @@ class evaluationScraper:
                         link = season.get('href')
                         link = 'https://www.espncricinfo.com' + link
                         year_links.append(link)
-        print(year_links)
+        print(len(year_links),' season links gathered')
+        self.year_links = year_links
         return year_links
 
+    def scrape_from_year_links(self):
+        for link in self.year_links:
+            ES.find_ODI_and_expand_series(link)
+            ES.scrape_total_wickets_and_links()
+            ES.save_score_wicket_files(ES.parse_total_wicket_text())
+        return None
+
+    def close_window(self):
+        time.sleep(5)
+        self.driver.close()
+
 ES = evaluationScraper()
-ES.scrape_n_years_back_from_2018(4)
+ES.wipe_files()
+ES.scrape_n_year_links_back_from_2018(4)
+ES.scrape_from_year_links()
+
+
+
