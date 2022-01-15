@@ -161,7 +161,8 @@ class MatchSim:
                 models[filename] = MarkovComments(self.com_n, self.fileDirectory + '/' + filename)
         return models
 
-    def initialiseOutcomes(self):                                           #       rebowl
+    @staticmethod
+    def initialiseOutcomes():                                               #       rebowl
         outcomeDict = {}                                                    #   R  E  v  W
         outcomeDict['(no_ball)'] =                  outcome('(no_ball)',        0, 1, 0, 0)
         outcomeDict['(no_ball)_1_run'] =            outcome('(no_ball)_1_run',  1, 1, 0, 0)
@@ -174,18 +175,25 @@ class MatchSim:
         outcomeDict['1_run,_OUT'] =                 outcome('1_run,_OUT',       1, 0, 1, 1)
         outcomeDict['1_run'] =                      outcome('1_run',            1, 0, 1, 0)
         outcomeDict['1_wide'] =                     outcome('1_wide',           0, 1, 0, 0)
+        outcomeDict['1_wide,_OUT'] =                outcome('1_wide,_OUT',      0, 1, 0, 1)
         outcomeDict['2_byes'] =                     outcome('2_byes',           0, 2, 1, 0)
         outcomeDict['2_leg_byes'] =                 outcome('2_leg_byes',       0, 2, 1, 0)
         outcomeDict['2_runs'] =                     outcome('2_runs',           2, 0, 1, 0)
+        outcomeDict['2_runs,_OUT'] =                outcome('2_runs,_OUT',      2, 0, 1, 1)
+        outcomeDict['(no_ball)_2_byes'] =           outcome('(no_ball)_2_byes', 1, 2, 0, 0)
         outcomeDict['2_wide'] =                     outcome('2_wide',           0, 2, 0, 0)
         outcomeDict['3_runs'] =                     outcome('3_runs',           3, 0, 1, 0)
         outcomeDict['3_wide'] =                     outcome('3_wide',           0, 3, 0, 0)
+        outcomeDict['3_byes'] =                     outcome('3_byes',           0, 3, 1, 0)
         outcomeDict['3_leg_byes'] =                 outcome('3_leg_byes',       0, 3, 1, 0)
+        outcomeDict['(no_ball)_3_runs'] =           outcome('(no_ball)_3_runs', 3, 1, 0, 0)
         outcomeDict['4_runs'] =                     outcome('4_runs',           4, 0, 1, 0)
         outcomeDict['4_byes'] =                     outcome('4_byes',           0, 4, 1, 0)
+        outcomeDict['4_wide'] =                     outcome('4_wide',           0, 4, 0, 0)
         outcomeDict['4_leg_byes'] =                 outcome('4_leg_byes',       0, 4, 1, 0)
         outcomeDict['5_runs'] =                     outcome('5_runs',           5, 0, 1, 0)
         outcomeDict['5_wide'] =                     outcome('5_wide',           0, 5, 0, 0)
+        outcomeDict['5_leg_byes'] =                 outcome('5_leg_byes',       0, 5, 1, 0)
         outcomeDict['6_runs'] =                     outcome('6_runs',           6, 0, 1, 0)
         outcomeDict['no_run'] =                     outcome('no_run',           0, 0, 1, 0)
         outcomeDict['OUT'] =                        outcome('OUT',              0, 0, 1, 1)

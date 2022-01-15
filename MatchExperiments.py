@@ -42,7 +42,7 @@ class MatchExperimenter:
         # TODO: plot graphs
         # TODO: compare, fine tune model?
 
-    def run_and_load_in(self,n=10000):
+    def run_and_load_in(self, n=10000):
         self.create_match_sim()
         self.run_and_save_n(n)
         self.load_in()
@@ -50,7 +50,7 @@ class MatchExperimenter:
     def load_in(self):
         self.innings_dicts = self.__class__.load_innings_to_dict()
         self.innings_df = self.__class__.undictify_innings(self.innings_dicts)
-        self.limits = self.get_limits()
+        self.limits = self.get_limits(self.innings_df)
 
     def create_match_sim(self):
         self.match_simulator = MatchSim.MatchSim('scrapedSequences', com_n=4, outcome_n=2)
@@ -89,34 +89,34 @@ class MatchExperimenter:
         innings_df = pandas.DataFrame.from_dict(all_innings, orient='index')
         return innings_df
 
-    def get_limits(self):
-        limits = {'runs': (self.innings_df['runs'].min(),
-                           self.innings_df['runs'].max(),
-                           len(pandas.unique(self.innings_df['runs']))),
-                  'extras': (self.innings_df['extras'].min(),
-                             self.innings_df['extras'].max(),
-                             len(pandas.unique(self.innings_df['extras']))),
-                  'total': (self.innings_df['total'].min(),
-                            self.innings_df['total'].max(),
-                            len(pandas.unique(self.innings_df['total']))),
-                  'wickets': (self.innings_df['wickets'].min(),
-                              self.innings_df['wickets'].max(),
-                              len(pandas.unique(self.innings_df['wickets']))),
-                  'totalBalls': (self.innings_df['totalBalls'].min(),
-                                 self.innings_df['totalBalls'].max(),
-                                 len(pandas.unique(self.innings_df['totalBalls']))),
-                  'legalBalls': (self.innings_df['legalBalls'].min(),
-                                 self.innings_df['legalBalls'].max(),
-                                 len(pandas.unique(self.innings_df['legalBalls']))),
-                  'fours': (self.innings_df['fours'].min(),
-                            self.innings_df['fours'].max(),
-                            len(pandas.unique(self.innings_df['fours']))),
-                  'sixes': (self.innings_df['sixes'].min(),
-                            self.innings_df['sixes'].max(),
-                            len(pandas.unique(self.innings_df['sixes']))),
-                  'maidens': (self.innings_df['maidens'].min(),
-                              self.innings_df['maidens'].max(),
-                              len(pandas.unique(self.innings_df['maidens'])))}
+    def get_limits(self, df):
+        limits = {'runs': (df['runs'].min(),
+                           df['runs'].max(),
+                           len(pandas.unique(df['runs']))),
+                  'extras': (df['extras'].min(),
+                             df['extras'].max(),
+                             len(pandas.unique(df['extras']))),
+                  'total': (df['total'].min(),
+                            df['total'].max(),
+                            len(pandas.unique(df['total']))),
+                  'wickets': (df['wickets'].min(),
+                              df['wickets'].max(),
+                              len(pandas.unique(df['wickets']))),
+                  'totalBalls': (df['totalBalls'].min(),
+                                 df['totalBalls'].max(),
+                                 len(pandas.unique(df['totalBalls']))),
+                  'legalBalls': (df['legalBalls'].min(),
+                                 df['legalBalls'].max(),
+                                 len(pandas.unique(df['legalBalls']))),
+                  'fours': (df['fours'].min(),
+                            df['fours'].max(),
+                            len(pandas.unique(df['fours']))),
+                  'sixes': (df['sixes'].min(),
+                            df['sixes'].max(),
+                            len(pandas.unique(df['sixes']))),
+                  'maidens': (df['maidens'].min(),
+                              df['maidens'].max(),
+                              len(pandas.unique(df['maidens'])))}
         # no need for entry for fall of wickets
         for key, value in limits.items():
             print(key, value)
@@ -134,18 +134,22 @@ class MatchExperimenter:
         with open(name, 'r') as readfile:
             return json.load(readfile)
 
-    def calculate_bin_limits(self, key, mmu=None):
+    def calculate_bin_limits(self, key, mmu=None, df=None):
         if mmu is None:
-            min, max, unique = self.limits[key]
+            if df is None:
+                min, max, unique = self.limits[key]
+            else:
+                min, max, unique = self.get_limits(df=df)[key]
         else:
             min, max, unique = mmu
+
         dif = max - min  # min: 2, max:4, values = 2,3,4 then we need > 2 unique values to have 3 equal bins
         if unique > dif:  # pigeon hole, with bin size 1 we can have at least one value per bin.
             bin_size = 1
         elif unique > dif*0.9:  # for the cases where thin tails have gaps, but 1-bins are still sensible
             bin_size = 1
         else:  # min 0, max 10, unique values = 0,3,6,10. ceil(10/4) = 3 so we get bins for 0 1 2|3 4 5|6 7 8|9 10 11
-            bin_size = 2*int(math.ceil(float(dif + 1) / float(unique)))  # plus one to centre on integers?
+            bin_size = 4*int(math.ceil(float(dif + 1) / float(unique)))  # plus one to centre on integers?
         print('chosen bin size:', bin_size)
         bin_start, bin_end = min - 0.5, max + 0.5
         print(bin_start,bin_end)
@@ -183,15 +187,54 @@ class MatchExperimenter:
             mp.xlabel(key)
             mp.show()
 
+    def get_stats_from_file(self, filename='evaluation_outcomes.txt'):
+        with open(filename, 'r') as f:
+            values = f.readlines()
+            innings_list = []
+            outcome_dict = MatchSim.MatchSim.initialiseOutcomes()
+            need_new = set()
+            for v in values:
+                first_innings = MatchSim.inningsState()
+                second_innings = MatchSim.inningsState()
+                splittened = v.split('END')
+                first = splittened[0].split(' ')[4:-1]
+                second = splittened[1].split(' ')[5:-1]
+                for outcome in first:
+                    if outcome not in outcome_dict:
+                        need_new.add(outcome)
+                    else:
+                        outcome_obj = outcome_dict[outcome]
+                        first_innings.updateState(outcome_obj)
+                for outcome in second:
+                    if outcome not in outcome_dict:
+                        need_new.add(outcome)
+                    else:
+                        outcome_obj = outcome_dict[outcome]
+                        second_innings.updateState(outcome_obj)
+                innings_list.append(first_innings)
+                innings_list.append(second_innings)
+            print('UNSUPPORTED OUTCOMES', need_new)
+            print(len(innings_list), 'innings')
+            dictified = self.dictify_innings(innings_list)
+            dataframified = self.undictify_innings(dictified)
+            #print(dataframified.head(5)) comparing to link shows correct stats
+            return dataframified
 
-    def innings_histogram_from_key(self, key):
+    def innings_histogram_from_key(self, key, df=None):
         print('getting', key, 'distribution')
-        values = self.innings_df[key]
-        bins = self.calculate_bin_limits(key)
+        if df is None:
+            values = self.innings_df[key]
+            bins = self.calculate_bin_limits(key)
+            title='generated'
+        else:
+            values = df[key]
+            bins = self.calculate_bin_limits(key, df=df)
+            title='scraped'
         #print(bins)
         fig, sample_chart = mp.subplots()
         sample_chart.hist(values, bins=bins)
         mp.xlabel(key)
+        mp.title(title)
         mp.show()
 
     def scatter_plot_histograms_from_keys(self, x_key, y_key):
@@ -215,17 +258,19 @@ class MatchExperimenter:
         mp.ylabel(y_key)
         mp.show()
 
-    def worm_plot(self,n=10):
+    def worm_plot(self,n=10,df=None):
+        if df is None:
+            df = self.innings_df
         fig, sample_chart = mp.subplots()
         alpha = 1 if n <= 10 else 0.05
         show_wickets = n <= 10
         col = None if n <= 10 else 'b'
         for index in range(n):
             #index = 3
-            sample_points = self.innings_df['total_and_wickets_each_over'][index]
-            end_total = self.innings_df['total'][index]
-            end_overs = (self.innings_df['legalBalls'][index]//6) + (self.innings_df['legalBalls'][index]%6)/10
-            end_wickets = self.innings_df['wickets'][index]
+            sample_points = df['total_and_wickets_each_over'][index]
+            end_total = df['total'][index]
+            end_overs = (df['legalBalls'][index]//6) + (df['legalBalls'][index]%6)/10
+            end_wickets = df['wickets'][index]
 
 
             current_wickets = 0
@@ -325,7 +370,25 @@ class MatchExperimenter:
 ME = MatchExperimenter()
 #ME.run_and_load_in(1000)
 ME.load_in()
-ME.innings_histogram_from_file('scores.txt','scores')
+stats = ME.get_stats_from_file()
+ME.limits = ME.get_limits(df=stats)
+ME.innings_histogram_from_key('total')
+ME.innings_histogram_from_key('total', df=stats)
+ME.innings_histogram_from_key('extras')
+ME.innings_histogram_from_key('extras', df=stats)
+ME.innings_histogram_from_key('fours')
+ME.innings_histogram_from_key('fours', df=stats)
+ME.innings_histogram_from_key('sixes')
+ME.innings_histogram_from_key('sixes', df=stats)
+ME.innings_histogram_from_key('wickets')
+ME.innings_histogram_from_key('wickets', df=stats)
+ME.innings_histogram_from_key('totalBalls')
+ME.innings_histogram_from_key('totalBalls', df=stats)
+
+ME.worm_plot(n=10)
+ME.worm_plot(n=10,df=stats)
+ME.worm_plot(n=100)
+ME.worm_plot(n=100,df=stats)
 '''
 ME.make_first_innings_win_prediction(46, 4, 60)   # runs, wickets, balls
 ME.make_second_innings_win_prediction(190, 6, 290, 200)   # runs, wickets, balls

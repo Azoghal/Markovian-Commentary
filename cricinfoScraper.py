@@ -22,13 +22,18 @@ def similarity(first, second):
     return SequenceMatcher(None, first, second).ratio()
 
 class CricinfoScraper:
-    def __init__(self, addressfile, maxNgramLength): #  give a file of web addresses to open
-        self.addresses = open(addressfile, 'r').readlines()
+    def __init__(self, addressfile, maxNgramLength, driver=None): #  give a file of web addresses to open
+        if addressfile is not None:
+            self.addresses = open(addressfile, 'r').readlines()
         self.maxNgramLength = maxNgramLength    # allows n START tokens to be added at beginning to facilatate ngrams
         self.outcomeEmissions = {}  # dict of outcome: array of emissions
         self.outcomeSequence = [] # array of outcomes to use to do transition probabilities
-        self.driver = webdriver.Chrome("C:/Users/sambe/chromedriver_win32/chromedriver.exe")
+        if driver is None:
+            self.driver = webdriver.Chrome("C:/Users/sambe/chromedriver_win32/chromedriver.exe")
+        else:
+            self.driver = driver
         self.cookieClickNeeded = True
+        self.newsClickNeeded = True
         self.totalBalls = 0
         self.inningsBalls = 0
         # self.teamA = []
@@ -296,6 +301,7 @@ class CricinfoScraper:
         self.outcomeEmissions = {}
         self.outcomeSequence = []
 
+        print(address)
         self.driver.get(address)
         self.content = self.driver.page_source
 
@@ -348,6 +354,15 @@ class CricinfoScraper:
             actionChains.move_to_element(consent_button).click().perform()
             self.cookieClickNeeded = False
 
+        if self.newsClickNeeded:
+            time.sleep(2)
+            actionChains = ActionChains(self.driver)
+            consent_button = self.driver.find_elements_by_id('wzrk-cancel')
+            if len(consent_button) ==1:
+                consent_button = consent_button[0]
+                actionChains.move_to_element(consent_button).click().perform()
+                self.newsClickNeeded = False
+
         time.sleep(4)
         self.driver.execute_script("window.scrollTo(0, " + str(500) + ")")
         actionChains = ActionChains(self.driver)
@@ -360,9 +375,9 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 
-scraper = CricinfoScraper('addresses.txt', 4)
+#scraper = CricinfoScraper('addresses.txt', 4)
 # scraper.scrape()
 # scraper.createSequenceFiles()
-scraper.scrapeAll()
+#scraper.scrapeAll()
 
 
