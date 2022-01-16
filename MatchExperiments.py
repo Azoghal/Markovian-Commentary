@@ -70,6 +70,8 @@ class MatchExperimenter:
     def dictify_innings(all_innings):
         all_dicts = {}
         for i, innings in enumerate(all_innings):
+            if innings.wickets > 10:
+                print('over 10 wickets: index', i)
             in_dict = {'runs': innings.runs,
                        'extras': innings.extras,
                        'total': innings.total,
@@ -156,20 +158,23 @@ class MatchExperimenter:
         bins = np.arange(bin_start, bin_end+0.1, bin_size)
         return bins
 
-    def cumulative_frequency_curve(self, key):
-        values = self.innings_df[key]
+    def cumulative_frequency_curve(self, key,df=None):
+        if df is None:
+            values = self.innings_df[key]
+            min, max, unique = self.limits[key]
+            title = 'Generated'
+        else:
+            values = df[key]
+            min, max, unique = self.get_limits(df=df)[key]
+            title = 'Scraped'
         n = len(values)
-        min,max, unique = self.limits[key]
-        n = max-min
-        values, base = np.histogram(values, bins=n)
-        print(base)
-        print(values)
+        values, base = np.histogram(values,range=(0,500), bins=500)#hardcoded
         cumulative = np.cumsum(values)
-        print(cumulative)
         fig, sample_chart = mp.subplots()
-        sample_chart.plot(base[:-1], cumulative/10, c='blue')
-        mp.yticks(np.arange(0, 100 + 1, 10.0))
+        sample_chart.plot(base[:-1], 100*cumulative/n, c='blue')
+       # mp.yticks(np.arange(0, 100 + 1, 10.0))
         mp.xlabel(key)
+        mp.title(title)
         mp.show()
 
     def innings_histogram_from_file(self, filename, key):
@@ -193,7 +198,7 @@ class MatchExperimenter:
             innings_list = []
             outcome_dict = MatchSim.MatchSim.initialiseOutcomes()
             need_new = set()
-            for v in values:
+            for i,v in enumerate(values):
                 first_innings = MatchSim.inningsState()
                 second_innings = MatchSim.inningsState()
                 splittened = v.split('END')
@@ -213,6 +218,10 @@ class MatchExperimenter:
                         second_innings.updateState(outcome_obj)
                 innings_list.append(first_innings)
                 innings_list.append(second_innings)
+                if first_innings.wickets > 10:
+                    first_innings.wickets = 10  #to correct mistakes in source such as Namibia Kenya 0ct 30 2015. batsmen out twice consecutively
+                if second_innings.wickets > 10:
+                    second_innings.wickets = 10
             print('UNSUPPORTED OUTCOMES', need_new)
             print(len(innings_list), 'innings')
             dictified = self.dictify_innings(innings_list)
@@ -261,7 +270,12 @@ class MatchExperimenter:
     def worm_plot(self,n=10,df=None):
         if df is None:
             df = self.innings_df
+            title = 'Generated'
+        else:
+            title = 'Scraped'
         fig, sample_chart = mp.subplots()
+        #sample_chart.xlim(0, 50)
+        mp.ylim(0, 500)
         alpha = 1 if n <= 10 else 0.05
         show_wickets = n <= 10
         col = None if n <= 10 else 'b'
@@ -295,8 +309,9 @@ class MatchExperimenter:
             sample_chart.plot(overs, runs, c=col, alpha=alpha)
             if show_wickets:
                 sample_chart.scatter(wicket_overs, wicket_over_runs)
-        mp.xlabel('overs')
-        mp.ylabel('runs')
+        mp.xlabel('Overs')
+        mp.ylabel('Runs')
+        mp.title(title)
         mp.show()
 
     def get_win_percentage(self,total, verbose=True):   # large number pre simulated innings
@@ -371,7 +386,8 @@ ME = MatchExperimenter()
 #ME.run_and_load_in(1000)
 ME.load_in()
 stats = ME.get_stats_from_file()
-ME.limits = ME.get_limits(df=stats)
+
+'''ME.limits = ME.get_limits(df=stats)
 ME.innings_histogram_from_key('total')
 ME.innings_histogram_from_key('total', df=stats)
 ME.innings_histogram_from_key('extras')
@@ -384,11 +400,15 @@ ME.innings_histogram_from_key('wickets')
 ME.innings_histogram_from_key('wickets', df=stats)
 ME.innings_histogram_from_key('totalBalls')
 ME.innings_histogram_from_key('totalBalls', df=stats)
-
+'''
 ME.worm_plot(n=10)
 ME.worm_plot(n=10,df=stats)
 ME.worm_plot(n=100)
 ME.worm_plot(n=100,df=stats)
+
+ME.cumulative_frequency_curve('total')
+ME.cumulative_frequency_curve('total',df=stats)
+
 '''
 ME.make_first_innings_win_prediction(46, 4, 60)   # runs, wickets, balls
 ME.make_second_innings_win_prediction(190, 6, 290, 200)   # runs, wickets, balls
