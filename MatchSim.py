@@ -73,6 +73,7 @@ class MatchSim:
         self.fileDirectory = fileDirectory
         self.com_n = com_n
         self.outcome_n = outcome_n
+        self.file_prefix_n = 4
         self.models = self.createDictOfModels()
         self.outcomeMarkov = self.models['outcomes.txt']
         self.outcomeDict = self.initialiseOutcomes()
@@ -86,9 +87,14 @@ class MatchSim:
         inningsB.printStatistics()
         self.compareInnings(inningsA, inningsB)
 
-    def simulateOneInnings(self, target=10000, showOutput=True, scoreEveryBall=False, commentary=False):
-        inState = inningsState()
-        prefix = [('START' + str(i)) for i in range(self.outcome_n, self.com_n)]
+    def simulateOneInnings(self, target=10000, continue_from=None, showOutput=True, scoreEveryBall=False, commentary=False):
+        #print('starting innings simulation')
+        if continue_from is None:
+            inState = inningsState()
+        else:
+            inState = continue_from
+        prefix = [('START' + str(i)) for i in range(self.outcome_n, self.file_prefix_n)]
+        print('prefix:', prefix)
         while inState.legalBalls < 300 and inState.wickets < 10 and inState.total <= target:
             word = 'END'
             while word == 'END':
