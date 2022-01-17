@@ -239,7 +239,6 @@ class MatchExperimenter:
             values = df[key]
             bins = self.calculate_bin_limits(key, df=df)
             title='scraped'
-        #print(bins)
         fig, sample_chart = mp.subplots()
         sample_chart.hist(values, bins=bins)
         mp.xlabel(key)
@@ -386,6 +385,7 @@ ME = MatchExperimenter()
 #ME.run_and_load_in(1000)
 ME.load_in()
 stats = ME.get_stats_from_file()
+
 '''
 ME.limits = ME.get_limits(df=stats)
 ME.innings_histogram_from_key('total')
@@ -402,13 +402,13 @@ ME.innings_histogram_from_key('totalBalls')
 ME.innings_histogram_from_key('totalBalls', df=stats)
 ME.worm_plot(n=10)
 ME.worm_plot(n=10,df=stats)
-'''
+
 ME.worm_plot(n=1000)
 ME.worm_plot(n=1000,df=stats)
 
 ME.cumulative_frequency_curve('total')
 ME.cumulative_frequency_curve('total',df=stats)
-
+'''
 '''
 ME.make_first_innings_win_prediction(46, 4, 60)   # runs, wickets, balls
 ME.make_second_innings_win_prediction(190, 6, 290, 200)   # runs, wickets, balls
