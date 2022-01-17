@@ -1,7 +1,7 @@
 # Markovian-Commentary for Cricket
 This personal project is a match simulation and commentary generation tool. Markov models are used to generate commentary that is relevant to the outcome of a ball, and also used to generate the sequence of balls that make up a match
 ## Commentary
-See ```two-gram_match_example, three-gram_match_example, four-gram_match_example``` for a full match's commentary.
+See ```two-gram_match_example```, ```three-gram_match_example```, ```four-gram_match_example``` for a full match's commentary.
 Here are some samples:
 ```no_run          :  tapped down into the covers
 no_run          :  punched into the covers
@@ -63,24 +63,15 @@ These examples show the trade off between novelty/variation and coherency of the
 
 ## Match Simulation
 
-![all generated worms][generated_allworms]
+New matches can be simulated with a markov model over the outcomes. Properties of these simulations can then be compared to those of 718 scraped ODI matches from 2013 to 2018.
+While the simulated innings and matches only finish when the match was concluded with a win, tie, or loss, many of the scraped matches were curtailed by rain and therefore were made up of artificially shortened innings. None of the training innings were shortened in such a way. The differing distributions can be seen below.
 
-[generated_allworms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_allworms.png
-[generated_100worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_100worms.png
-[generated_10worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_10worms.png
-[generated_total]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_total.png
-[generated_extras]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_extras.png
-[generated_wickets]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_wickets.png
-[generated_fours]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_fours.png
-[generated_sixes]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_sixes.png
-[generated_totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_totalBalls.png
+![totalBalls][totalBalls]
 
-[scraped_allworms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_allworms.png
-[scraped_100worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_100worms.png
-[scraped_10worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_10worms.png
-[scraped_total]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_total.png
-[scraped_extras]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_extras.png
-[scraped_wickets]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_wickets.png
-[scraped_fours]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_fours.png
-[scraped_sixes]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_sixes.png
-[scraped_totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_totalBalls.png
+In the simulations, all innings save those with 10 wickets falling would reach 300 legal balls in the innings. We see that the 10-wicket innings account for the roughly linear part of the distribution until the 300th ball. Some balls are classed as extras, and extras such as wides and no balls must be rebowled. These follow a roughly normal distribution with a mean of around 12 which accounts for the spike occurring *after* the 300 legal ball requirement
+
+![extras][extras]
+
+[totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBalls.png
+[extras]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/extras.png
+
