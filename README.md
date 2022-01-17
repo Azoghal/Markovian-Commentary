@@ -62,3 +62,25 @@ no_run          :  cutter , runs his fingers down the track
 These examples show the trade off between novelty/variation and coherency of the generated commentary. The markov models were trained from 29 ODI matches between 2018 and 2022, totalling over 15000 balls. With a larger training set, one could expect suitable levels of variation with higher window sizes.
 
 ## Match Simulation
+
+![all generated worms][generated_allworms]
+
+[generated_allworms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_allworms.png
+[generated_100worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_100worms.png
+[generated_10worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_10worms.png
+[generated_total]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_total.png
+[generated_extras]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_extras.png
+[generated_wickets]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_wickets.png
+[generated_fours]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_fours.png
+[generated_sixes]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_sixes.png
+[generated_totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/generated_totalBalls.png
+
+[scraped_allworms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_allworms.png
+[scraped_100worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_100worms.png
+[scraped_10worms]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_10worms.png
+[scraped_total]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_total.png
+[scraped_extras]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_extras.png
+[scraped_wickets]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_wickets.png
+[scraped_fours]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_fours.png
+[scraped_sixes]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_sixes.png
+[scraped_totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/scraped_totalBalls.png
