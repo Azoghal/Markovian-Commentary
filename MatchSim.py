@@ -78,6 +78,7 @@ class MatchSim:
         self.fileDirectory = fileDirectory
         self.com_n = com_n
         self.outcome_n = outcome_n
+        self.file_prefix_n = 4
         self.models = self.createDictOfModels()
         self.outcomeMarkov = self.models['outcomes.txt']
         self.outcomeDict = self.initialiseOutcomes()
@@ -105,7 +106,8 @@ class MatchSim:
             inState = inningsState()
         else:
             inState = continue_from
-        prefix = [('START' + str(i)) for i in range(self.outcome_n, self.com_n)]
+        prefix = [('START' + str(i)) for i in range(self.outcome_n, self.file_prefix_n)]
+        print('prefix:', prefix)
         while inState.legalBalls < 300 and inState.wickets < 10 and inState.total <= target:
             word = 'END'
             count = 0

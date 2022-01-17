@@ -276,7 +276,7 @@ class MatchExperimenter:
         fig, sample_chart = mp.subplots()
         #sample_chart.xlim(0, 50)
         mp.ylim(0, 500)
-        alpha = 1 if n <= 10 else 0.05
+        alpha = 1 if n <= 10 else 0.02
         show_wickets = n <= 10
         col = None if n <= 10 else 'b'
         for index in range(n):
@@ -386,7 +386,7 @@ ME = MatchExperimenter()
 #ME.run_and_load_in(1000)
 ME.load_in()
 stats = ME.get_stats_from_file()
-
+'''
 ME.limits = ME.get_limits(df=stats)
 ME.innings_histogram_from_key('total')
 ME.innings_histogram_from_key('total', df=stats)
@@ -402,8 +402,9 @@ ME.innings_histogram_from_key('totalBalls')
 ME.innings_histogram_from_key('totalBalls', df=stats)
 ME.worm_plot(n=10)
 ME.worm_plot(n=10,df=stats)
-ME.worm_plot(n=100)
-ME.worm_plot(n=100,df=stats)
+'''
+ME.worm_plot(n=1000)
+ME.worm_plot(n=1000,df=stats)
 
 ME.cumulative_frequency_curve('total')
 ME.cumulative_frequency_curve('total',df=stats)

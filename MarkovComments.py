@@ -12,7 +12,7 @@ class MarkovComments:
         #self.tokens_distinct = list(set(self.tokens))
         self.tokens_to_id, self.id_to_tokens = MarkovComments.create_indices(self.tokens)
         self.n = n
-        self.file_prefix_length = 4 # TODO switch to learning this from the file
+        self.file_prefix_length = n # TODO switch to learning this from the file
         self.ngrams, self.ngrams_distinct = self.create_ngrams()
         self.ngrams_to_id, self.id_to_ngrams = MarkovComments.create_indices(self.ngrams)
         self.transition_matrix_prob = self.create_transition_matrix_prob()
@@ -60,6 +60,9 @@ class MarkovComments:
         p_list = prefix.split(' ')[-self.n:]  #  gets up to n from end of prefix text
         prefix = ' '.join(p_list)
         if (len(p_list) < self.n):
+            print(prefix)
+            print(p_list)
+            print(self.n)
             warnings.warn('Prefix too short, giving random')
             return np.random.choice(self.ngrams)
         elif prefix not in self.ngrams:
