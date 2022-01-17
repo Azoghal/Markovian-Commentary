@@ -199,9 +199,15 @@ class MatchSim:
         outcomeDict['OUT'] =                        outcome('OUT',              0, 0, 1, 1)
         return outcomeDict
 
-#Ms = MatchSim('scrapedSequences', com_n=4, outcome_n=2)  # scrapedSequences # 9-matches-punctuation-in-word
-#Ms.simulateMatch()
-
+'''Ms = MatchSim('scrapedSequences', com_n=4, outcome_n=2)  # scrapedSequences # 9-matches-punctuation-in-word
+Ms.score = True
+Ms.score_each_ball = True
+Ms.commentary = True
+Ms.match_statistics = True
+Ms.match_recap = True
+Ms.match_winner = True
+Ms.simulateMatch()
+'''
 
 '''         # find an innings with at least 400 runs
 iterations = 0
