@@ -1,5 +1,6 @@
 # Markovian-Commentary for Cricket
-This personal project is a match simulation and commentary generation tool. Markov models are used to generate commentary that is relevant to the outcome of a ball, and also used to generate the sequence of balls that make up a match
+This personal project is a match simulation and commentary generation tool. Markov models are used to generate commentary that is relevant to the outcome of a ball, and also used to generate the sequence of balls that make up a match. This can also be used to predict the winner of a match from a certain state, by doing a Monte Carlo search over possible futures of the match.
+
 ## Commentary
 See ```two-gram_match_example```, ```three-gram_match_example```, ```four-gram_match_example``` for a full match's commentary.
 Here are some samples:
@@ -69,7 +70,7 @@ While the simulated innings and matches only finish when the match was concluded
 
 ![totalBalls][totalBalls]
 
-In the simulations, all innings save those with 10 wickets falling would reach 300 legal balls in the innings. We see that the 10-wicket innings account for the roughly linear part of the distribution until the 300th ball. Some balls are classed as extras, and extras such as wides and no balls must be rebowled. These follow a roughly normal distribution with a mean of around 12 extra runs (correlating to at *most* 12 rebowled balls) which accounts for the spike occurring *after* the 300 legal ball requirement.
+In the simulations, all innings save those with 10 wickets falling would reach 300 legal balls in the innings. We see that the 10-wicket innings account for the roughly linear part of the distribution until the 300th ball. Some balls are classed as extras, and extras such as wides and no balls must be rebowled. These follow a roughly normal distribution with a mean of around 12 extra runs (there are at most 1 balls rebowled per extra run) which accounts for the spike occurring *after* the 300 legal ball requirement.
 
 ![extras][extras]
 
@@ -83,11 +84,55 @@ Now we will look at how close the model's distribution of runs, wickets, fours e
 
 ![total][total]
 
-The total run distributions seem fairly normal, with means around 280 for the generated matches, and a fair bit lower for the real matches, around 230. The simulated distribution has a long left hand tail which we would expect to come from innings where all wickets fell before the full 50 overs were bowled. The real distribution looks to have a greater standard deviation, and also much more extreme values at each end
+The total run distributions seem fairly normal, with means around 280 for the generated matches, and a fair bit lower for the real matches, around 230. The simulated distribution has a long left hand tail which we would expect to come from innings where all wickets fell before the full 50 overs were bowled. The real distribution looks to have a greater spread, and also more extreme values at each end
+
+![wickets][wickets]
+
+The distribution of wickets for the generated matches compares well with real data, apart from having fewer low wicket results. This makes sense due to the inclusion of rain-shortened matches in the evaluation data but not training. Intuitively it feels like the next ball being a wicket is a bernouli trial, with the probability an aggregate over all the transitions into the wicket state, and over the course of a match a binomial distribution is formed.
+
+The distributions of fours and sixes are interesting, as on a basic level these two outcomes are very similar - occasional boundaries. While fours are more common, and sixes are more likely to occur later in the innings, it was unexpected to see that they had such different distributions.
+
+![fours][fours]
+![sixes][sixes]
+
+The model has managed to capture the skew of the sixes distribution.
+
+### Worm Plots
+
+Worm plots are a standard way of showing how an innings has progressed, with overs on the x axis, runs on the y, and wickets marked onto the trace. The gradient at any point is the run rate for that over. An innings progresses from the origin upwards and rightwards until all wickets have fallen or all overs bowled.
+
+Sampling just 10 worm plots from the generated and scraped sets we see that the model has captured the trends of the worms, but has less variation between innings, as well as within innings. Notably the 10 scraped plots includes the ODI record of 481/6 posted by England against Australia in 2018. This innings is an outlier, but even without it, it can be seen that the generated innings follow more similar paths than the real matches.
+
+![worms10][worms10]
+
+Looking at 100 worms we start to see the difference between what the model has captured and the reality of an innings
+
+![worms100][worms100]
+
+Typically in cricket, the run rate decreases as wickets fall, and increases as the remaining balls decrease. This would typically lead to a curve with increasing gradient. 
+In ODIs, there is a period at the beginning of an innings called a powerplay, that favours the batting side and allows them to score faster than they usually would at the start of a match. This is the explanation for the small curve at the beginning that has decreasing gradient - as the powerplay ends it becomes harder to score runs. 
+
+![wormsall][wormsall]
+
+The markov model for finding the next outcome has a window size of 2, meaning that trends such as those mentioned above are far too long term for the model to capture. In the absence of those trends, the model has captured the more simple notion of average run rate, which is uniform throughout the progression of a generated innings. As the model generated a higher total distribution than the scraped matches, we can conclude that this run rate is too high, which can be explained by the higher quality of teams in the training data, and the lack of the curtailed innings.
+
+## Result Prediction
+
+yes
 
 [totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBalls.png
 [totalBallsZoom]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBallsZoom.png
 [extras]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/extras.png
 [total]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/total.png
+[wickets]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/wickets.png
+[fours]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/fours.png
+[sixes]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/sixes.png
+[worms10]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/worms10.png
+[worms100]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/worms100.png
+[wormsall]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/wormsall.png
+
+
+
+
 
 
