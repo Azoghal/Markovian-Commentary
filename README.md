@@ -118,7 +118,29 @@ The markov model for finding the next outcome has a window size of 2, meaning th
 
 ## Result Prediction
 
-yes
+### Static Predictions
+
+Building a cumulative frequency curve for total runs gives us a way to simply calculate the chance of winning when given a score for an innings.
+
+![cumfreq][cumfreq]
+
+We see the expected shape, with an earlier/lower midpoint for the real innings. This precalculated curve, over some large number of simulated innings, gives us the proportion of innings that are expected to be above or below that score, in other words the proportion of precomputed possible outcomes that are wins or losses. The following values are based on 1000 simulated matches
+
+```
+1.6 % chance to win with 150 runs
+
+27.0 % chance to win with 250 runs
+
+56.5 % chance to win with 280 runs
+
+96.0 % chance to win with 330 runs
+```
+
+That technique works when the total of one innings is known, but cannot give a chance to win from the middle of a game. There are two cases to consider - partway through the first innings, and having finished the first innings and being partway through the second innings.
+
+### Partway through first innings
+
+
 
 [totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBalls.png
 [totalBallsZoom]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBallsZoom.png
@@ -130,6 +152,7 @@ yes
 [worms10]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/worms10.png
 [worms100]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/worms100.png
 [wormsall]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/wormsall.png
+[cumfreq]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/cumfreq.png
 
 
 
