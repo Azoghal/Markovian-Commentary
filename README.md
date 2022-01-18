@@ -63,15 +63,31 @@ These examples show the trade off between novelty/variation and coherency of the
 
 ## Match Simulation
 
+### Match Length
 New matches can be simulated with a markov model over the outcomes. Properties of these simulations can then be compared to those of 718 scraped ODI matches from 2013 to 2018.
 While the simulated innings and matches only finish when the match was concluded with a win, tie, or loss, many of the scraped matches were curtailed by rain and therefore were made up of artificially shortened innings. None of the training innings were shortened in such a way. The differing distributions can be seen below.
 
 ![totalBalls][totalBalls]
 
-In the simulations, all innings save those with 10 wickets falling would reach 300 legal balls in the innings. We see that the 10-wicket innings account for the roughly linear part of the distribution until the 300th ball. Some balls are classed as extras, and extras such as wides and no balls must be rebowled. These follow a roughly normal distribution with a mean of around 12 which accounts for the spike occurring *after* the 300 legal ball requirement
+In the simulations, all innings save those with 10 wickets falling would reach 300 legal balls in the innings. We see that the 10-wicket innings account for the roughly linear part of the distribution until the 300th ball. Some balls are classed as extras, and extras such as wides and no balls must be rebowled. These follow a roughly normal distribution with a mean of around 12 extra runs (correlating to at *most* 12 rebowled balls) which accounts for the spike occurring *after* the 300 legal ball requirement.
 
 ![extras][extras]
 
+Here is a zoomed in view of the vaguely normal spike between 300 and 320 balls.
+
+![totalBallsZoom][totalBallsZoom]
+
+### Match Totals, Wickets, Stats
+
+Now we will look at how close the model's distribution of runs, wickets, fours etc. are to the reality. One thing to bear in mind is that there are weather shortened matches in the scraped evaluation trend, so we would expect to see a slightly lower number of wickets, fours and sixes for example. Another point is that while the training data for the model was made of matches involving England, Sri Lanka, India, Pakistan, Ireland*, Australia, South Africa, West Indies, all of which are Test-playing nations (of the highest quality) \*(Ireland are typically the weakest team in this list, but still play Tests). The evaluation data includes all ODI matches going back 718 matches from 2018, with much weaker teams included.
+
+![total][total]
+
+The total run distributions seem fairly normal, with means around 280 for the generated matches, and a fair bit lower for the real matches, around 230. The simulated distribution has a long left hand tail which we would expect to come from innings where all wickets fell before the full 50 overs were bowled. The real distribution looks to have a greater standard deviation, and also much more extreme values at each end
+
 [totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBalls.png
+[totalBallsZoom]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBallsZoom.png
 [extras]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/extras.png
+[total]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/total.png
+
 
