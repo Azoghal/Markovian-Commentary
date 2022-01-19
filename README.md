@@ -4,7 +4,8 @@ This personal project is a match simulation and commentary generation tool. Mark
 ## Commentary
 See ```two-gram_match_example```, ```three-gram_match_example```, ```four-gram_match_example``` for a full match's commentary.
 Here are some samples:
-```no_run          :  tapped down into the covers
+```
+no_run          :  tapped down into the covers
 no_run          :  punched into the covers
 1_run           :  short of a length outside off , punched off the back foot down to third man
 no_run          :  length outside off , opens the face and dabs towards point - still no run
@@ -15,7 +16,8 @@ OUT             :  bowled him ! BATTER slides back into his crease , in anticipa
 ```
 ##### 4-grams
 We see examples such as the following prove that a single model has the capacity to generate novel commentary from the same starting state:
-```1_run           :  back of a length , sliding through , clonked to mid-on
+```
+1_run           :  back of a length , sliding through , clonked to mid-on
 1_run           :  back of a length , BATTER sprints like it 's 1999 all over again , and through he comes for his second hundred of the series !
 1_run           :  back of a length to start , swished aerially through point out to the sweeper for one , not particularly convincingly
 1_run           :  back of a length , a stiff-armed pull through midwicket
@@ -31,12 +33,13 @@ We see examples such as the following prove that a single model has the capacity
 ```
 These examples were generated with a window of length 4. This helps make the generated commentary coherent, but limits the mixing and matching done by the model, which can lead to the model reproducing training sentences rather than generating anew.
 ##### 3-grams
-```sensible examples
+```
+sensible examples
 1_run           :  tossed up , very loopy above the eyeline , pushed out to long-on
 1_run           :  tossed up , very loopy above the eyeline and it turns into a slightly cramped cut , out to deep midwicket
 1_run           :  tossed up , lots of air outside off stump , goes right back and punches through cover
 1_run           :  tossed up , but drops well short of him
-# incoherent or contradictory
+incoherent or contradictory
 no_run          :  and that is splintering the stumps . Defended back to BOWLER
 1_run           :  nurdled to the on-side , it 's not a terrible response , BATTER rocks onto the back foot , and bashed into the covers
 no_run          :  shoulders arms to complete another economical over
@@ -44,14 +47,14 @@ no_run          :  shoulders arms to complete another economical over
 3-grams give more variation to the commentary, but sometimes causes long-distance contradictions.
 ##### 2-grams
 ```
-#sensible examples
+sensible examples
 1_run           :  good length on the pull but mistimed , just clipped towards midwicket
 no_run          :  good length , BATTER blocks it in short again , this time , angled down the line !
 no_run          :  flat delivery outside off , he reverse-swipes across the left-hander . Utilising the bounce , turns into a defensive block
 2_runs          :  floated up outside off , post point and returns for two . Good running to get a couple
 4_runs          :  turned inside-out by a few inches , BATTER hammers it out of answers . Another last-ball four , slapping BOWLER in his follow-through
 4_runs          :  thrashed through point
-#incoherent or contradictory
+incoherent or contradictory
 1_run           :  up comes the hundred , South Africa , dare one say it , parries it to long-on
 1_run           :  fine leg
 no_run          :  angled bat
@@ -140,7 +143,23 @@ That technique works when the total of one innings is known, but cannot give a c
 
 ### Partway through first innings
 
+To give a win prediction from partway through the first innings, the future of the innings is simulated multiple times, and then static predictions are made from those totals. One prediction is made by finding the chance to win with the average total reached, and another is made by averaging the chance to win among all totals.
 
+```
+first innings win prediction for 46 - 4 from 60 balls
+average: 239.92
+chance to win based on chance to win with average runs: 0.2
+chance to win based on average of chance to win over all sims: 0.3713599999999998
+```
+
+### Partway through second innings
+
+In this case we have extra information in that we know the target total. Many simulations are run from the state of the second innings, and the number of wins, losses and draws are counted, effectively aggregating results of a Monte Carlo search of the tree of possible futures for that innings.
+
+```
+second innings win prediction, chasing  200 , currently at 190 - 6 from 290 balls
+win: 0.42  draw: 0.07  lose: 0.51
+```
 
 [totalBalls]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBalls.png
 [totalBallsZoom]: https://github.com/Azoghal/Markovian-Commentary/blob/master/plots/totalBallsZoom.png
