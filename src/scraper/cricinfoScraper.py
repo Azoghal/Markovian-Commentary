@@ -372,12 +372,12 @@ class CricinfoScraper:
         time.sleep(4)
         self.driver.execute_script("window.scrollTo(0, " + str(500) + ")")
         actionChains = ActionChains(self.driver)
-        button = self.driver.find_element_by_class_name('comment-inning-dropdown')
+        button = self.driver.find_element(By.CLASS_NAME, 'comment-inning-dropdown')
         actionChains.move_to_element(button).click().perform()
 
         time.sleep(1)
         actionChains = ActionChains(self.driver)
-        next_innings_button = self.driver.find_element_by_class_name('ci-dd__menu')
+        next_innings_button = self.driver.find_element(By.CLASS_NAME, 'ci-dd__menu')
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 if __name__=="__main__":
