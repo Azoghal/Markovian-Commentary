@@ -377,7 +377,8 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 if __name__=="__main__":
-    pass
+    data_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'training', 'scrapedSequences'))
+    print(data_path)
     #scraper = CricinfoScraper('addresses.txt', 4)
     # scraper.scrape()
     # scraper.createSequenceFiles()
