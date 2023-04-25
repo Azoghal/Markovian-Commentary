@@ -17,6 +17,8 @@ except LookupError:
 
 from player import player
 
+SIMILARITY_THRESHOLD = 0.8
+
 
 def similarity(first, second):
     return SequenceMatcher(None, first, second).ratio()
@@ -195,9 +197,9 @@ class CricinfoScraper:
                     addApostrapheS = True
                     cleanWord = word[:-2]
 
-                if similarity(cleanWord,bowler) > 0.8:
+                if similarity(cleanWord,bowler) > SIMILARITY_THRESHOLD:
                     cleanWord = 'BOWLER'
-                elif similarity(cleanWord,batter) > 0.8:
+                elif similarity(cleanWord,batter) > SIMILARITY_THRESHOLD:
                     cleanWord = 'BATTER'
 
                 cleanedWords.append(cleanWord)
@@ -210,7 +212,7 @@ class CricinfoScraper:
             for word in longWords:
                 wbo = similarity(word, bowler)
                 wba = similarity(word, batter)
-                if wbo > 0.8:  # can sort these out in a more nice way by preprocessing text and reformatting at end
+                if wbo > SIMILARITY_THRESHOLD:  # can sort these out in a more nice way by preprocessing text and reformatting at end
                     if word[-3:] == '\'s,':
                         word = 'BOWLER\'s,'
                     elif word[-1:] == ',':
@@ -219,7 +221,7 @@ class CricinfoScraper:
                         word = 'BOWLER\'s'
                     else:
                         word = 'BOWLER'
-                if wba > 0.8:  # can sort these out in a more nice way by preprocessing text and reformatting at end
+                if wba > SIMILARITY_THRESHOLD:  # can sort these out in a more nice way by preprocessing text and reformatting at end
                     if word[-3:] == '\'s,':
                         word = 'BATTER\'s,'
                     elif word[-1:] == ',':
