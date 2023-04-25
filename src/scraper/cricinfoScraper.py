@@ -105,14 +105,14 @@ class CricinfoScraper:
         self.totalBalls = self.totalBalls + self.inningsBalls
 
     def createSequenceFiles(self):
-        save_path = os.path.join(data_path, 'scrapedSequences')
+        save_path = os.path.join(data_path, 'training', 'scrapedSequences')
         # address = os.getcwd()+'/scrapedSequences'
         for filename in os.listdir(save_path):
             with open(os.path.join(save_path, filename), 'w') as f:
                 f.write('')
 
     def writeSequencesToFiles(self):
-        save_path = os.path.join(data_path, 'scrapedSequences')
+        save_path = os.path.join(data_path, 'training', 'scrapedSequences')
         startSequence = ''
         endSequence = ' END'
 
@@ -380,9 +380,9 @@ class CricinfoScraper:
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
 if __name__=="__main__":
-    data_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'training', 'scrapedSequences'))
+    data_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'data'))
     print(data_path)
-    scraper = CricinfoScraper(os.path.join(data_path,'addresses.txt'), 4)
+    scraper = CricinfoScraper(data_path, 4)
     # scraper.scrape()
     # scraper.createSequenceFiles()
     scraper.scrapeAll()
