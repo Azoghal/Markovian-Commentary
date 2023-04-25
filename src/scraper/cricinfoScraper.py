@@ -376,10 +376,11 @@ class CricinfoScraper:
         next_innings_button = self.driver.find_element_by_class_name('ci-dd__menu')
         actionChains.move_to_element_with_offset(next_innings_button, 20, 20).click().perform()
 
-
-#scraper = CricinfoScraper('addresses.txt', 4)
-# scraper.scrape()
-# scraper.createSequenceFiles()
-#scraper.scrapeAll()
+if __name__=="__main__":
+    pass
+    #scraper = CricinfoScraper('addresses.txt', 4)
+    # scraper.scrape()
+    # scraper.createSequenceFiles()
+    #scraper.scrapeAll()
 
 

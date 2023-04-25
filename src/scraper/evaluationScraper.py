@@ -8,7 +8,6 @@ from selenium.webdriver import ActionChains
 
 import cricinfoScraper
 
-
 class evaluationScraper:
 
     def __init__(self):
@@ -232,15 +231,15 @@ class evaluationScraper:
         time.sleep(5)
         self.driver.close()
 
+if __name__=="__main__":
+    ES = evaluationScraper()
+    #ES.wipe_files()
+    ES.scrape_n_year_links_back_from_2018(4)
+    ES.scrape_from_year_links()
+    #ES.save_match_links()
 
-ES = evaluationScraper()
-#ES.wipe_files()
-ES.scrape_n_year_links_back_from_2018(4)
-ES.scrape_from_year_links()
-#ES.save_match_links()
-
-#ES2 = evaluationScraper()
-#ES2.load_match_links()
-#ES2.scrape_outcome_sequences_from_commentary(720)
+    #ES2 = evaluationScraper()
+    #ES2.load_match_links()
+    #ES2.scrape_outcome_sequences_from_commentary(720)
 
 
