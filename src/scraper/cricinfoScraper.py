@@ -4,6 +4,7 @@ import unicodedata
 
 from selenium import webdriver
 from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from difflib import SequenceMatcher
 import pandas
@@ -355,14 +356,14 @@ class CricinfoScraper:
         if self.cookieClickNeeded:
             time.sleep(2)
             actionChains = ActionChains(self.driver)
-            consent_button = self.driver.find_element_by_id('onetrust-close-btn-container')
+            consent_button = self.driver.find_element(By.ID, 'onetrust-close-btn-container')
             actionChains.move_to_element(consent_button).click().perform()
             self.cookieClickNeeded = False
 
         if self.newsClickNeeded:
             time.sleep(2)
             actionChains = ActionChains(self.driver)
-            consent_button = self.driver.find_elements_by_id('wzrk-cancel')
+            consent_button = self.driver.find_elements(By.ID, 'wzrk-cancel')
             if len(consent_button) ==1:
                 consent_button = consent_button[0]
                 actionChains.move_to_element(consent_button).click().perform()
