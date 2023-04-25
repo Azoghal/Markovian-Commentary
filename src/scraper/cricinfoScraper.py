@@ -24,9 +24,12 @@ def similarity(first, second):
     return SequenceMatcher(None, first, second).ratio()
 
 class CricinfoScraper:
-    def __init__(self, addressfile, maxNgramLength, driver=None): #  give a file of web addresses to open
-        if addressfile is not None:
-            self.addresses = open(addressfile, 'r').readlines()
+    def __init__(self, data_path, maxNgramLength, driver=None): #  give a file of web addresses to open
+        self.data_path = data_path
+
+        if data_path is not None:
+            self.addresses = open(os.path.join(data_path,'links/addresses.txt'), 'r').readlines()
+
         self.maxNgramLength = maxNgramLength    # allows n START tokens to be added at beginning to facilatate ngrams
         self.outcomeEmissions = {}  # dict of outcome: array of emissions
         self.outcomeSequence = [] # array of outcomes to use to do transition probabilities
@@ -102,14 +105,14 @@ class CricinfoScraper:
         self.totalBalls = self.totalBalls + self.inningsBalls
 
     def createSequenceFiles(self):
-        save_path = 'scrapedSequences/'
-        address = os.getcwd()+'/scrapedSequences'
-        for filename in os.listdir(address):
-            with open(os.path.join(address, filename), 'w') as f:
+        save_path = os.path.join(data_path, 'scrapedSequences')
+        # address = os.getcwd()+'/scrapedSequences'
+        for filename in os.listdir(save_path):
+            with open(os.path.join(save_path, filename), 'w') as f:
                 f.write('')
 
     def writeSequencesToFiles(self):
-        save_path = 'scrapedSequences/'
+        save_path = os.path.join(data_path, 'scrapedSequences')
         startSequence = ''
         endSequence = ' END'
 
@@ -117,7 +120,7 @@ class CricinfoScraper:
             startSequence = startSequence + 'START' + str(i) + ' '
         endAndStart = endSequence + ' ' + startSequence
 
-        with open(save_path+'outcomes.txt', 'a') as f:
+        with open(os.path.join(save_path,'outcomes.txt'), 'a') as f:
             f.write(' '.join(self.outcomeSequence) + ' ')
 
         for k in self.outcomeEmissions.keys():
@@ -243,7 +246,7 @@ class CricinfoScraper:
             print('scraping address ' + str(i) +  ' of ' + str(len(self.addresses)))
             if not outcomes_only:
                 self.scrapeTeamList(address[:-1]+'/full-scorecard')
-            self.scrape(address[:-1]+'/ball-by-ball-commentary', outcomes_only=outcomes_only) #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
+            self.scrape(os.path.join(address[:-1],'ball-by-ball-commentary'), outcomes_only=outcomes_only) #  <=------------------------!!!!!!!!!!!!!!!!!!!!!!
             self.writeSequencesToFiles()
             print('scraped data written to files')
             i = i + 1
@@ -379,9 +382,9 @@ class CricinfoScraper:
 if __name__=="__main__":
     data_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'training', 'scrapedSequences'))
     print(data_path)
-    #scraper = CricinfoScraper('addresses.txt', 4)
+    scraper = CricinfoScraper(os.path.join(data_path,'addresses.txt'), 4)
     # scraper.scrape()
     # scraper.createSequenceFiles()
-    #scraper.scrapeAll()
+    scraper.scrapeAll()
 
 
